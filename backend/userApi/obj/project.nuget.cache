@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "RO7iolgCLZ4=",
+  "dgSpecHash": "kYEeY7QsVBY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\0031432412027\\Downloads\\AMS5_TradeHolding\\backend\\userApi\\userApi.csproj",
+  "projectFilePath": "C:\\Users\\ofici\\Downloads\\AMS5_TradeHolding\\backend\\userApi\\userApi.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\0031432412027\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.1\\microsoft.aspnetcore.openapi.9.0.1.nupkg.sha512",
-    "C:\\Users\\0031432412027\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+    "C:\\Users\\ofici\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.1\\microsoft.aspnetcore.openapi.9.0.1.nupkg.sha512",
+    "C:\\Users\\ofici\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
   ],
   "logs": []
 }
