@@ -191,3 +191,4 @@ C:\Users\ofici\Downloads\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\refi
 C:\Users\ofici\Downloads\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\userApi.pdb
 C:\Users\ofici\Downloads\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\userApi.genruntimeconfig.cache
 C:\Users\ofici\Downloads\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\ref\userApi.dll
+C:\Users\ofici\Downloads\AMS5_TradeHolding\backend\userApi\bin\Debug\net9.0\BCrypt.Net-Next.dll
