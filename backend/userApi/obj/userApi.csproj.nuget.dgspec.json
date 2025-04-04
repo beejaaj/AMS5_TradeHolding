@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\gravi\\Documents\\Faculdade\\Fatec\\ANO 2\\PROGRAMAÇÃO MULTIPLATAFORMA\\AMS5-TRADEHOLDING\\AMS5_TradeHolding\\backend\\userApi\\userApi.csproj": {}
+    "C:\\Users\\0031432412023\\Downloads\\AMS5_TradeHolding\\backend\\userAPI\\userApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\gravi\\Documents\\Faculdade\\Fatec\\ANO 2\\PROGRAMAÇÃO MULTIPLATAFORMA\\AMS5-TRADEHOLDING\\AMS5_TradeHolding\\backend\\userApi\\userApi.csproj": {
+    "C:\\Users\\0031432412023\\Downloads\\AMS5_TradeHolding\\backend\\userAPI\\userApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\gravi\\Documents\\Faculdade\\Fatec\\ANO 2\\PROGRAMAÇÃO MULTIPLATAFORMA\\AMS5-TRADEHOLDING\\AMS5_TradeHolding\\backend\\userApi\\userApi.csproj",
+        "projectUniqueName": "C:\\Users\\0031432412023\\Downloads\\AMS5_TradeHolding\\backend\\userAPI\\userApi.csproj",
         "projectName": "userApi",
-        "projectPath": "C:\\Users\\gravi\\Documents\\Faculdade\\Fatec\\ANO 2\\PROGRAMAÇÃO MULTIPLATAFORMA\\AMS5-TRADEHOLDING\\AMS5_TradeHolding\\backend\\userApi\\userApi.csproj",
-        "packagesPath": "C:\\Users\\gravi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\gravi\\Documents\\Faculdade\\Fatec\\ANO 2\\PROGRAMAÇÃO MULTIPLATAFORMA\\AMS5-TRADEHOLDING\\AMS5_TradeHolding\\backend\\userApi\\obj\\",
+        "projectPath": "C:\\Users\\0031432412023\\Downloads\\AMS5_TradeHolding\\backend\\userAPI\\userApi.csproj",
+        "packagesPath": "C:\\Users\\0031432412023\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\0031432412023\\Downloads\\AMS5_TradeHolding\\backend\\userAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\gravi\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\0031432412023\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -42,7 +42,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
+          "auditMode": "direct"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -100,7 +100,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
