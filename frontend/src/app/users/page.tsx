@@ -8,7 +8,7 @@ export default function UsersPage(){
     useEffect (() => {
         async function fetchUsers(){
             try{
-                const data = await userService.getUsers();
+                const data = await userService.getAll();
                 setUsers(data);
             } catch (error){
                 console.log("Erro ao buscar usuário", error);
