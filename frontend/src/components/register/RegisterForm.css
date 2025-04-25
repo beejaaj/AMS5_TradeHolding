@@ -1,0 +1,21 @@
+@import '../auth/LoginForm.css';
+
+.login-title {
+  font-size: 1.5rem;
+}
+
+.login-logo {
+    width: 150px;
+    height: auto;
+    margin: 0 auto 1rem;
+    display: block;
+  }
+
+.submit-button {
+  width: 100%;
+  background-color: #300437;
+}
+
+.submit-button:hover {
+  background-position: right center;
+}
