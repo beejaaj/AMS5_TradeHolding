@@ -64,13 +64,13 @@ export const UserProfile = ({ params }: { params: { id: string } }) => {
                     const data = await res.json();
                     message = data.message || message;
                 } catch (e) {
-                    // erro não é JSON, ignora
+ 
                 }
                 throw new Error(message);
             }
 
             alert('Usuário excluído com sucesso!');
-            router.push('/users'); // redireciona pra lista de usuários
+            router.push('/users'); 
         } catch (err: any) {
             console.error(err);
             setError(err.message || 'Erro ao excluir usuário');

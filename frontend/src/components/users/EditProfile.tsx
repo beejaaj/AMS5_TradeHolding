@@ -38,7 +38,6 @@ export const EditProfile = ({ params }: { params: { id: string } }) => {
         setError('');
       
         try {
-          // envia sempre name, email, phone, address, photo E password
           const res = await fetch(userAPI.edit(params.id), {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

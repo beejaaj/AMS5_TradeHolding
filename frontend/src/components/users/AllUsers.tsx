@@ -56,15 +56,12 @@ export const AllUsers = () => {
                 throw new Error(errorData.message || 'Falha ao excluir usuário');
             }
 
-            // Atualização otimista
             setUsers(users.filter((user: any) => user.id !== userId));
             
-            // Feedback visual
             alert('Usuário excluído com sucesso!');
         } catch (error: any) {
             console.error('Erro ao excluir usuário:', error);
             setError(error.message || 'Erro ao excluir usuário');
-            // Recarrega os dados para garantir consistência
             await fetchUsers();
         } finally {
             setDeletingId(null);

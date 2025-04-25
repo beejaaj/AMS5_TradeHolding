@@ -109,7 +109,6 @@
     border-radius: 8px 8px 0 0; 
 }
 
-/* Adicione ao seu arquivo CSS existente */
 .delete-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
