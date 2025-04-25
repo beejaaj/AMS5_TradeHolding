@@ -1,5 +1,5 @@
 import axios from "axios";
-import {userAPI} from "./api";
+import {userAPI} from "./API";
 
 export interface User{
     id?: number;

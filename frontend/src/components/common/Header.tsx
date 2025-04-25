@@ -1,20 +1,20 @@
-interface HeaderProps {
-    siteName?: string;
-    pageName: string;
-}
-const Header: React.FC<HeaderProps> = ({ siteName = "Trade Holding AMS", pageName }) => {
-    return (
-        <div className='header'>
+"use client";
 
-            <div className='text-light text-lg font-bold'>{siteName}</div>
-            <div className='text-accent text-3xl font-medium'>{pageName}</div>
-            <div className='flex items-center gap-4'>
-                <button className='btn'>Tema</button>
-                <button className='btn'>Perfil</button>
+import { useEffect, useState } from "react";
+import { FaUserAlt } from 'react-icons/fa';
+import Link from 'next/link';
+import './Header.css';
+
+export const Header = () => {
+
+    return (
+        <header className="header">
+            <div className="logo-container">
+                <Link href="/users" className="logo">
+                    <img src="/Lunaria.jpg" alt="Logo do Site" className="logo-img" />
+                </Link>
             </div>
 
-        </div>
-    )
-}
-
-export default Header;
+        </header>
+    );
+};
