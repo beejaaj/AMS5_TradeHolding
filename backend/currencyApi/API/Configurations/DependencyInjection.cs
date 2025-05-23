@@ -8,8 +8,11 @@ public static class DependencyInjection
         services.AddScoped<ICurrencyService, CurrencyService>();
         services.AddScoped<IHistoryRepository, HistoryRepository>();
         services.AddScoped<IHistoryService, HistoryService>();
-        services.AddDbContext<CurrencyHistoryDbContext>(options =>
-            options.UseSqlite("Data Source=Infrastructure/Data/currencyhistorydb.sqlite"));
+        services.AddDbContext<CurrencyDbContext>(options =>
+        options.UseSqlite("Data Source=Infrastructure/Data/currencydb.sqlite"));
+
+        services.AddDbContext<HistoryDbContext>(options =>
+        options.UseSqlite("Data Source=Infrastructure/Data/historydb.sqlite"));
         return services;
     }
 }

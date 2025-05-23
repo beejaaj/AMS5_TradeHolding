@@ -21,7 +21,7 @@ public class CurrencyController : ControllerBase
     [HttpGet]
     public IActionResult GetAllCurrency()
     {
-        var currencys = _currencyService.GetAllCurrency();
+        var currencys = _currencyService.GetAllCurrencys();
         return Ok(currencys);
     }
 
