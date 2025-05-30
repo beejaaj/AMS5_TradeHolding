@@ -704,3 +704,4 @@ D:\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\refint\userApi.dll
 D:\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\userApi.pdb
 D:\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\userApi.genruntimeconfig.cache
 D:\AMS5_TradeHolding\backend\userApi\obj\Debug\net9.0\ref\userApi.dll
+C:\Users\gravi\Documents\Faculdade\Fatec\ANO 2\PROGRAMAÇÃO MULTIPLATAFORMA\AMS5-TRADEHOLDING\AMS5_TradeHolding\backend\userapi\bin\Debug\net9.0\package-lock.json
