@@ -1,34 +1,66 @@
 using Microsoft.AspNetCore.Mvc;
+using CurrencyAPI.Application.Interfaces;
+using CurrencyAPI.API.DTOs;
+using CurrencyAPI.Domain.Entities;
 
-[ApiController]
-[Route("api/[controller]")]
-public class HistoryController : ControllerBase
+namespace CurrencyAPI.API.Controllers
 {
-    private readonly IHistoryService _historyService;
-
-    public HistoryController(IHistoryService historyService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class HistoryController : ControllerBase
     {
-        _historyService = historyService;
-    }
+        private readonly IHistoryService _historyService;
 
-    [HttpPost]
-    public IActionResult RegisterHistory(HistoryDTO historyDto)
-    {
-        var result = _historyService.RegisterHistory(historyDto);
-        return Ok(result);
-    }
+        public HistoryController(IHistoryService historyService)
+        {
+            _historyService = historyService;
+        }
 
-    [HttpGet]
-    public IActionResult GetAllHistory()
-    {
-        var historys = _historyService.GetAllHistorys();
-        return Ok(historys);
-    }
+        [HttpPost]
+        public async Task<IActionResult> RegisterHistory([FromBody] HistoryDTO dto)
+        {
+            var history = new History(dto.CurrencyId, dto.Value, dto.Date);
+            await _historyService.RegisterHistoryAsync(history);
+            return Created("", dto);
+        }
 
-    [HttpGet("{id}")]
-    public IActionResult GetHistoryDetails(int id)
-    {
-        var history = _historyService.GetHistoryDetails(id);
-        return history != null ? Ok(history) : NotFound();
+        [HttpGet("{currencyId:guid}")]
+        public async Task<IActionResult> GetByCurrency(Guid currencyId)
+        {
+            var histories = await _historyService.GetCurrencyDetailsAsync(currencyId);
+            var result = histories.Select(h => new HistoryDTO
+            {
+                Id = h.Id,
+                CurrencyId = h.CurrencyId,
+                Value = h.Value,
+                Date = h.Date
+            });
+
+            return Ok(result);
+        }
+
+        [HttpGet("{currencyId:guid}/range")]
+        public async Task<IActionResult> GetByDateRange(Guid currencyId, [FromQuery] DateTime from, [FromQuery] DateTime to)
+        {
+            var histories = await _historyService.GetByDateRangeAsync(currencyId, from, to);
+            var result = histories.Select(h => new HistoryDTO
+            {
+                Id = h.Id,
+                CurrencyId = h.CurrencyId,
+                Value = h.Value,
+                Date = h.Date
+            });
+
+            return Ok(result);
+        }
+
+        
+        
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteHistory(Guid id)
+        {
+            await _historyService.DeleteHistoryAsync(id);
+            return NoContent();
+        }
     }
 }

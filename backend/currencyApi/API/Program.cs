@@ -1,15 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-
-using System.Text;
+using CurrencyAPI.Application.Interfaces;
+using CurrencyAPI.Application.Services;
+using CurrencyAPI.Domain.Interfaces;
+using CurrencyAPI.Infrastructure.Repositories;
+using CurrencyAPI.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuration = builder.Configuration;
+// ⛓ Adiciona o DbContext com a conexão (ajuste conforme seu banco de dados)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// 🔌 Injeção de dependência para Repository e Service
+builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
-// builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -19,24 +27,22 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-        options.SwaggerDoc("v1", new OpenApiInfo
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Currency API",
         Version = "v1",
-        Description = "API para gerenciamento de usuários",
+        Description = "API para gerenciamento de moedas",
         Contact = new OpenApiContact
         {
             Name = "João Perez",
             Email = "joao.saraiva@fatec.sp.gov.br"
         }
     });
-
 });
-
-builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
@@ -51,8 +57,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll"); 
-// app.UseAuthorization();
+app.UseCors("AllowAll");
 
 app.MapControllers();
 app.Run();

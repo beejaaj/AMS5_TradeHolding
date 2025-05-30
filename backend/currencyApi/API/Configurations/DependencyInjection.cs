@@ -1,18 +1,28 @@
 using Microsoft.EntityFrameworkCore;
+using CurrencyAPI.Application.Interfaces;
+using CurrencyAPI.Application.Services;
+using CurrencyAPI.Domain.Interfaces;
+using CurrencyAPI.Infrastructure.Repositories;
+using CurrencyAPI.Infrastructure.Data;
+// using CurrencyAPI.API.Extensions;
 
-public static class DependencyInjection
+
+namespace CurrencyAPI.API.Configurations
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static class DependencyInjection
     {
-        services.AddScoped<ICurrencyRepository, CurrencyRepository>();
-        services.AddScoped<ICurrencyService, CurrencyService>();
-        services.AddScoped<IHistoryRepository, HistoryRepository>();
-        services.AddScoped<IHistoryService, HistoryService>();
-        services.AddDbContext<CurrencyDbContext>(options =>
-        options.UseSqlite("Data Source=Infrastructure/Data/currencydb.sqlite"));
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+        {
+            services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+            services.AddScoped<ICurrencyService, CurrencyService>();
 
-        services.AddDbContext<HistoryDbContext>(options =>
-        options.UseSqlite("Data Source=Infrastructure/Data/historydb.sqlite"));
-        return services;
+            services.AddScoped<IHistoryRepository, HistoryRepository>();
+            services.AddScoped<IHistoryService, HistoryService>();
+
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite("Data Source=Infrastructure/Data/currencydb.sqlite"));
+
+            return services;
+        }
     }
 }

@@ -1,47 +1,40 @@
-public class HistoryService : IHistoryService
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CurrencyAPI.Application.Interfaces;
+using CurrencyAPI.Domain.Entities;
+using CurrencyAPI.Domain.Interfaces;
+
+namespace CurrencyAPI.Application.Services
 {
-    private readonly IHistoryRepository _historyRepository;
-
-    public HistoryService(IHistoryRepository historyRepository)
+    public class HistoryService : IHistoryService
     {
-        _historyRepository = historyRepository;
-    }
+        private readonly IHistoryRepository _historyRepository;
 
-     public HistoryDTO RegisterHistory(HistoryDTO historyDto)
-    {
-
-        var history = new History 
+        public HistoryService(IHistoryRepository historyRepository)
         {
-            Datetime = historyDto.Datetime, 
-            Value = historyDto.Value
-        };
-        _historyRepository.Add(history);
+            _historyRepository = historyRepository;
+        }
 
-        return new HistoryDTO
+        public async Task RegisterHistoryAsync(History history)
         {
-            Datetime = history.Datetime,
-            Value = history.Value
-        };
-    }
+            await _historyRepository.RegisterHistoryAsync(history);
+        }
 
-    public HistoryDTO? GetHistoryDetails(int id)
-    {
-        var history = _historyRepository.GetById(id);
-        return history != null ? new HistoryDTO 
-        { 
-            Datetime = history.Datetime, 
-            Value = history.Value
-        } : null;
-    }
 
-    public List<HistoryDTO> GetAllHistorys()
-    {
-        return _historyRepository.ListAll().Select(history => new HistoryDTO
+        public async Task<IEnumerable<History>> GetCurrencyDetailsAsync(Guid currencyId)
         {
-            Id = history.Id,
-            Datetime = history.Datetime, 
-            Value = history.Value
-        }).ToList();
-    }
+            return await _historyRepository.GetCurrencyDetailsAsync(currencyId);
+        }
 
+        public async Task<IEnumerable<History>> GetByDateRangeAsync(Guid currencyId, DateTime from, DateTime to)
+        {
+            return await _historyRepository.GetByDateRangeAsync(currencyId, from, to);
+        }
+
+        public async Task DeleteHistoryAsync(Guid id)
+        {
+            await _historyRepository.DeleteHistoryAsync(id);
+        }
+    }
 }

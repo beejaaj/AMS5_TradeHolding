@@ -1,6 +1,11 @@
-public class HistoryDTO
+using System;
+namespace CurrencyAPI.API.DTOs
 {
-    public int Id {get; set; }
-    public DateTime Datetime { get; set; }
-    public float Value { get; set; }    
+    public class HistoryDTO
+    {
+        public Guid Id { get; set; }
+        public Guid CurrencyId { get; set; }
+        public DateTime Date { get; set; }
+        public decimal Value { get; set; }
+    }
 }

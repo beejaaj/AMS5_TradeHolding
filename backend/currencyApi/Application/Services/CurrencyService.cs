@@ -1,84 +1,52 @@
-public class CurrencyService : ICurrencyService
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CurrencyAPI.Application.Interfaces;
+using CurrencyAPI.Domain.Entities;
+using CurrencyAPI.Domain.Interfaces;
+
+namespace CurrencyAPI.Application.Services
 {
-    private readonly ICurrencyRepository _currencyRepository;
-
-    public CurrencyService(ICurrencyRepository currencyRepository)
+    public class CurrencyService : ICurrencyService
     {
-        _currencyRepository = currencyRepository;
-    }
+        private readonly ICurrencyRepository _currencyRepository;
 
-     public CurrencyDTO RegisterCurrency(CurrencyDTO currencyDto)
-    {
-
-        var currency = new Currency 
+        public CurrencyService(ICurrencyRepository currencyRepository)
         {
-            Name = currencyDto.Name, 
-            Description = currencyDto.Description, 
-            Backing = currencyDto.Backing,
-            Status = currencyDto.Status
-        };
-        _currencyRepository.Add(currency);
+            _currencyRepository = currencyRepository;
+        }
 
-        return new CurrencyDTO
+         public async Task RegisterCurrencyAsync(Currency currency)
         {
-            Name = currency.Name,
-            Description = currency.Description,
-            Backing = currency.Backing,
-            Status = currency.Status
-        };
-    }
+            await _currencyRepository.RegisterCurrencyAsync(currency);
+        }
 
-    public CurrencyDTO? GetCurrencyDetails(int id)
-    {
-        var currency = _currencyRepository.GetById(id);
-        return currency != null ? new CurrencyDTO 
-        { 
-            Name = currency.Name, 
-            Description = currency.Description,
-            Backing = currency.Backing,
-            Status = currency.Status
-        } : null;
-    }
-
-    public List<CurrencyDTO> GetAllCurrencys()
-    {
-        return _currencyRepository.ListAll().Select(currency => new CurrencyDTO
+        public async Task<Currency?> GetCurrencyDetailsAsync(Guid id)
         {
-            Id = currency.Id,
-            Name = currency.Name, 
-            Description = currency.Description,
-            Backing = currency.Backing,
-            Status = currency.Status
-        }).ToList();
-    }
+            return await _currencyRepository.GetCurrencyDetailsAsync(id);
+        }
 
-    public CurrencyDTO? UpdateCurrency(int id, CurrencyDTO currencyDto)
-    {
-        var currency = _currencyRepository.GetById(id);
-        if (currency == null) return null;
+        public async Task<IEnumerable<Currency>> GetAllCurrencyAsync()
+        {
+            return await _currencyRepository.GetAllCurrencyAsync();
+
+        }
+        public async Task<Currency?> GetBySymbolAsync(string symbol)
+        {
+            return await _currencyRepository.GetBySymbolAsync(symbol);
+        }
+
+
+        public async Task UpdateCurrencyAsync(Currency currency)
+        {
+            await _currencyRepository.UpdateCurrencyAsync(currency);
+        }
         
-        currency.Name = currencyDto.Name;
-        currency.Description = currencyDto.Description;
-        currency.Backing = currencyDto.Backing;
-        currency.Status = currencyDto.Status;
-        
-        _currencyRepository.Update(currency);
-        
-        return new CurrencyDTO
+
+        public async Task DeleteCurrencyAsync(Guid id)
         {
-            Name = currency.Name,
-            Description = currency.Description,
-            Backing = currency.Backing,
-            Status = currency.Status
-        };
-    }
+            await _currencyRepository.DeleteCurrencyAsync(id);
+        }
 
-    public bool DeleteCurrency(int id)
-    {
-        var currency = _currencyRepository.GetById(id);
-        if (currency == null) return false;
-        _currencyRepository.Delete(id);
-        return true;
     }
-
 }
