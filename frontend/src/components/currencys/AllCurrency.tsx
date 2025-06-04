@@ -88,12 +88,12 @@ export const AllCurrency = () => {
                         {currency.map((currency: any) => (
                             <tr key={currency.id}>
                                 <td>
-                                    <Link href={`/currencys/view/${currency.id}`} className="view-btn">
+                                    <Link href={`/currency/view/${currency.id}`} className="view-btn">
                                         {currency.symbol}
                                     </Link>
                                 </td>
                                 <td>
-                                    <Link href={`/currencys/view/${currency.id}`} className="view-btn">
+                                    <Link href={`/currency/view/${currency.id}`} className="view-btn">
                                         {currency.name}
                                     </Link>
                                 </td>

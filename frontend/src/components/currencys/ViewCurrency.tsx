@@ -5,9 +5,9 @@ import { FaCoins, FaPen, FaTrash } from "react-icons/fa";
 import { currencyAPI } from "@/services/API";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import "./CurrencyProfile.css";
+import "./ViewCurrency.css";
 
-export const CurrencyProfile = ({ params }: { params: { id: string } }) => {
+export const CurrencyDetails = ({ params }: { params: { id: string } }) => {
   const [currency, setCurrency] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);

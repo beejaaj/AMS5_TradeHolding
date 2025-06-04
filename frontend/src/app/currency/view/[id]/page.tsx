@@ -1,6 +1,6 @@
 "use client";
 
-import { ViewCurrency } from "@/components/currencys/ViewCurrency";
+import { CurrencyDetails } from "@/components/currencys/ViewCurrency";
 import { Header } from '@/components/common/Header';
 
 type ProfilePageProps = {
@@ -11,7 +11,7 @@ export default function CurrencyDetailsPage({ params }: ProfilePageProps) {
   return (
     <div>
       <Header />
-      <ViewCurrency params={params} />
+      <CurrencyDetails params={params} />
     </div>
   );
 }
