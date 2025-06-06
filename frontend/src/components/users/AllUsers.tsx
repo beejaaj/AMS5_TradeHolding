@@ -57,7 +57,7 @@ export const AllUsers = () => {
             }
 
             setUsers(users.filter((user: any) => user.id !== userId));
-            
+
             alert('Usuário excluído com sucesso!');
         } catch (error: any) {
             console.error('Erro ao excluir usuário:', error);
@@ -97,7 +97,7 @@ export const AllUsers = () => {
                                     <Link href={`/users/edit/${user.id}`} className="update-btn">
                                         <FaPen />
                                     </Link>
-                                    <button 
+                                    <button
                                         onClick={() => handleDelete(user.id)}
                                         className="delete-btn"
                                         disabled={deletingId === user.id}

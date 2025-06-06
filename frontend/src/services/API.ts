@@ -20,9 +20,16 @@ const crudCurrencyAPI = (basePath: string) => ({
   getCurrencyDetails: (id: string | number) => `${basePath}/${id}`,
 });
 
+const crhistoryAPI = (basePath: string) => ({
+  RegisterHistory: () => `${basePath}`,
+  GetByCurrency: (id: string | number) => `${basePath}/${id}`,
+});
+
 const userAPI = crudAPI(`${BASE_URL}/User`);
 
 const currencyAPI = crudCurrencyAPI(`${BASE_URL2}/Currency`);
+
+const historyAPI = crhistoryAPI(`${BASE_URL2}/History`);
 
 const authAPI = {
   login: () => `${BASE_URL}/Auth/Login`,
@@ -30,4 +37,4 @@ const authAPI = {
   refreshToken: () => `${BASE_URL}/Auth/RefreshToken`,
 };
 
-export { userAPI, authAPI, currencyAPI };
+export { userAPI, authAPI, currencyAPI, historyAPI };

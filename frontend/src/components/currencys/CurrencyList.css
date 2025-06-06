@@ -1,0 +1,122 @@
+.currency-list-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  width: 100%;
+  max-width: 300px;
+  height: 80vh;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  color: #fff;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.list-header h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.btn-currency {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  position: relative;
+  border: 2px solid #4f2481;
+  background: transparent;
+  color: #4f2481;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  overflow: hidden;
+  background-image: linear-gradient(to right, #4f2481 100%, #4f2481 100%);
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease, color 0.3s ease;
+}
+
+.btn-currency:hover {
+  background-size: 100% 100%;
+  color: #fff;
+}
+
+.currency-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex-grow: 1;
+  scrollbar-width: thin;
+}
+
+.currency-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.currency-items::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.3rem;
+  background-color: #2a2a2a;
+}
+
+.item:hover {
+  background-color: #3a3a3a;
+}
+
+.selected {
+  background-color: #612d9d;
+}
+
+.symbol {
+  font-weight: 600;
+  color: #f5c518;
+}
+
+.name {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.no-currency {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.loading {
+  text-align: center;
+  color: #aaa;
+  margin-top: 2rem;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 0.8rem;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 1rem;
+}

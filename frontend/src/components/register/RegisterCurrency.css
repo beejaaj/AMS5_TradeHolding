@@ -19,3 +19,13 @@
 .submit-button:hover {
   background-position: right center;
 }
+
+select.form-input {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+select.form-input option {
+  color: #000 !important;
+  background-color: #fff !important;
+}
