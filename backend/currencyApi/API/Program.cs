@@ -5,9 +5,16 @@ using CurrencyAPI.Application.Services;
 using CurrencyAPI.Domain.Interfaces;
 using CurrencyAPI.Infrastructure.Repositories;
 using CurrencyAPI.Infrastructure.Data;
+using CurrencyAPI.Infrastructure.Services;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 // ⛓ Adiciona o DbContext com a conexão (ajuste conforme seu banco de dados)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -18,6 +25,8 @@ builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 builder.Services.AddScoped<IHistoryRepository, HistoryRepository>();
 builder.Services.AddScoped<IHistoryService, HistoryService>();
+
+builder.Services.AddHostedService<ExternalApiWorker>();
 
 builder.Services.AddControllers();
 

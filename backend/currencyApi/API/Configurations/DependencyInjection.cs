@@ -4,6 +4,8 @@ using CurrencyAPI.Application.Services;
 using CurrencyAPI.Domain.Interfaces;
 using CurrencyAPI.Infrastructure.Repositories;
 using CurrencyAPI.Infrastructure.Data;
+using CurrencyAPI.Infrastructure.Services;
+using CurrencyAPI.API.Configurations;
 // using CurrencyAPI.API.Extensions;
 
 
@@ -21,6 +23,10 @@ namespace CurrencyAPI.API.Configurations
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite("Data Source=Infrastructure/Data/currencydb.sqlite"));
+
+            services.AddHttpClient(); 
+            services.AddHostedService<ExternalApiWorker>(); 
+
 
             return services;
         }
