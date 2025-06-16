@@ -70,17 +70,6 @@ export const CurrencyDashboard = () => {
           <div className="lower-section">
             <div className="history-header">
               <h3>Histórico</h3>
-              <button
-                className="btn btn-history btn-add-history"
-                onClick={() =>
-                  router.push(
-                    `/currency/history/create?currencyId=${selectedCurrency.id}`
-                  )
-                }
-              >
-                <FaPlus />
-                <span>Novo Histórico</span>
-              </button>
             </div>
 
             {error && <div className="error-message">{error}</div>}

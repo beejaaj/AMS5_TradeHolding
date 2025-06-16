@@ -76,24 +76,6 @@ export const CurrencyDetails = ({
             <strong>Status:</strong> {currency.status}
           </p>
         </div>
-
-        <div className="currency-actions">
-          <Link
-            href={`/currency/edit/${currency.id}`}
-            className="btn btn-edit"
-          >
-            <FaPen />
-            <span>Editar</span>
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="btn btn-delete"
-            disabled={deleting}
-          >
-            <FaTrash />
-            <span>{deleting ? "Excluindo..." : "Excluir"}</span>
-          </button>
-        </div>
       </div>
     </div>
   );

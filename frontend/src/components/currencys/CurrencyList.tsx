@@ -1,4 +1,3 @@
-// components/CurrencyList.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { currencyAPI } from "@/services/API";
 import { Currency } from "../../services/types";
 import Link from "next/link";
 import "./CurrencyList.css";
+import { useRouter } from "next/navigation";
 
 export const CurrencyList = ({
     onSelect,
@@ -16,6 +16,10 @@ export const CurrencyList = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const router = useRouter();
 
     useEffect(() => {
         fetchCurrencies();
@@ -44,6 +48,47 @@ export const CurrencyList = ({
     const handleClick = (currency: Currency) => {
         setSelectedId(currency.id!);
         onSelect(currency);
+        setMenuOpenId(null); // Fecha menu ao selecionar
+    };
+
+    const toggleMenu = (id: number) => {
+        setMenuOpenId((prevId) => (prevId === id ? null : id));
+    };
+
+    const handleEdit = (id: number) => {
+        setMenuOpenId(null);
+        router.push(`/currency/edit/${id}`);
+    };
+
+    const handleDelete = async (id: number) => {
+        const currencyToDelete = currencies.find((c) => c.id === id);
+        if (!currencyToDelete) return;
+        if (!window.confirm("Tem certeza que deseja excluir esta moeda?")) return;
+
+        setDeleting(true);
+        setError("");
+        try {
+            const res = await fetch(currencyAPI.deleteCurrency(id), {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                throw new Error(errData?.message || "Erro ao excluir moeda");
+            }
+            alert("Moeda excluída com sucesso!");
+
+            // Se a moeda excluída estava selecionada, limpa a seleção
+            if (selectedId === id) {
+                setSelectedId(null);
+                onSelect(null as any); // cast pq onSelect espera Currency, mas null é ok aqui
+            }
+            await fetchCurrencies();
+        } catch (err: any) {
+            setError(err.message || "Erro ao excluir moeda");
+        } finally {
+            setDeleting(false);
+            setMenuOpenId(null);
+        }
     };
 
     return (
@@ -51,9 +96,7 @@ export const CurrencyList = ({
             <div className="list-header">
                 <h2>Moedas</h2>
                 <Link href="/currency/create">
-                    <button
-                        className="btn btn-currency btn-add"
-                    >
+                    <button className="btn btn-currency btn-add">
                         <span>+ Nova Moeda</span>
                     </button>
                 </Link>
@@ -71,11 +114,41 @@ export const CurrencyList = ({
                     {currencies.map((c) => (
                         <li
                             key={c.id}
-                            className={selectedId === c.id ? "item selected" : "item"}
+                            className={`item ${selectedId === c.id ? "selected" : ""}`}
                             onClick={() => handleClick(c)}
                         >
-                            <span className="symbol">{c.symbol}</span>
-                            <span className="name">{c.name}</span>
+                            <div className="currency-info">
+                                <span className="symbol">{c.symbol}</span>
+                                <span className="name">{c.name}</span>
+                            </div>
+                            <div
+                                className="menu-button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleMenu(c.id!);
+                                }}
+                            >
+                                ⋮
+                                {menuOpenId === c.id && (
+                                    <div
+                                        className="dropdown-menu"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div
+                                            className="dropdown-item"
+                                            onClick={() => handleEdit(c.id!)}
+                                        >
+                                            Editar
+                                        </div>
+                                        <div
+                                            className="dropdown-item delete"
+                                            onClick={() => handleDelete(c.id!)}
+                                        >
+                                            {deleting ? "Excluindo..." : "Excluir"}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </li>
                     ))}
                 </ul>

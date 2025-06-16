@@ -13,18 +13,23 @@
     margin-bottom: 2rem;
     color: #fff;
 }
-
-.users-table {
+.users-table-wrapper {
     width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .users-table {
+    width: 100%;
+    min-width: 600px; 
     border-collapse: collapse;
     margin-top: 20px;
     background-color: transparent;
-    border-radius: 8px; 
+    border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease;
-}
-
+  }
+  
 .users-table th, .users-table td {
     padding: 12px 15px;
     border: 1px solid #2d0541; 
@@ -56,6 +61,11 @@
     transition: background-color 0.3s, transform 0.2s;
     color: #fff;
     text-align: center;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .view-btn {
@@ -126,4 +136,84 @@
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .users-container {
+        padding: 2rem 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .users-table th, .users-table td {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+
+    .view-btn, .update-btn, .delete-btn {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .users-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .users-table {
+        min-width: 500px;
+    }
+
+    .users-table th, .users-table td {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    .page-title {
+        font-size: 1.3rem;
+    }
+
+    .view-btn, .update-btn, .delete-btn {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+@media (max-width: 360px) {
+    .users-table,
+    .users-table thead {
+        display: none;
+    }
+
+    .users-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        background-color: #280331;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .users-table tbody tr td {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border: none;
+        border-bottom: 1px solid #2d0541;
+        font-size: 0.9rem;
+    }
+
+    .users-table tbody tr td:last-child {
+        border-bottom: none;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .actions {
+        justify-content: center;
+        gap: 12px;
+    }
 }
