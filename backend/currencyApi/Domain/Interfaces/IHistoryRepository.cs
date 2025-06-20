@@ -7,6 +7,7 @@ namespace CurrencyAPI.Domain.Interfaces
 {
     public interface IHistoryRepository
     {
+        Task<IEnumerable<History>> GetAllAsync();
         Task<History?> GetHistoryDetailsAsync(Guid id);
         Task<IEnumerable<History>> GetCurrencyDetailsAsync(Guid currencyId);
         Task<IEnumerable<History>> GetByDateRangeAsync(Guid currencyId, DateTime from, DateTime to);

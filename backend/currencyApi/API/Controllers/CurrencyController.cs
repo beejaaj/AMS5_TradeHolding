@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using CurrencyAPI.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using CurrencyAPI.API.DTOs;
 using CurrencyAPI.Domain.Entities;
+using CurrencyAPI.Infrastructure.Data;
 
 namespace CurrencyAPI.API.Controllers
 {
@@ -20,7 +22,10 @@ namespace CurrencyAPI.API.Controllers
         [HttpPost]
         public async Task<IActionResult> RegisterCurrency([FromBody] CurrencyDTO dto)
         {
-            var currency = new Currency(dto.Symbol, dto.Description, dto.Name, dto.Status, dto.Backing);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var currency = new Currency(dto.Symbol, dto.Description, dto.Name, dto.Status, dto.Backing, dto.Reverse);
             await _currencyService.RegisterCurrencyAsync(currency);
             return CreatedAtAction(nameof(GetCurrencyDetails), new { id = currency.Id }, dto);
         }
@@ -37,6 +42,7 @@ namespace CurrencyAPI.API.Controllers
                 Name = c.Name,
                 Status = c.Status,
                 Backing = c.Backing,
+                Reverse = c.Reverse,
                 Histories = c.Histories.Select(h => new HistoryDTO
                 {
                     Id = h.Id,
@@ -62,7 +68,8 @@ namespace CurrencyAPI.API.Controllers
                 Name = currency.Name,
                 Description = currency.Description,
                 Status = currency.Status,
-                Backing = currency.Backing
+                Backing = currency.Backing,
+                Reverse = currency.Reverse
             });
         }
 
@@ -72,13 +79,16 @@ namespace CurrencyAPI.API.Controllers
             var existing = await _currencyService.GetCurrencyDetailsAsync(id);
             if (existing == null) return NotFound();
 
-            var updated = new Currency(dto.Symbol, dto.Description, dto.Name, dto.Status, dto.Backing);
-            typeof(Currency).GetProperty("Id")?.SetValue(updated, id); 
+            var context = HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            context.Entry(existing).State = EntityState.Detached;
+
+            var updated = new Currency(dto.Symbol, dto.Description, dto.Name, dto.Status, dto.Backing, dto.Reverse);
+            typeof(Currency).GetProperty("Id")?.SetValue(updated, id);
 
             await _currencyService.UpdateCurrencyAsync(updated);
             return NoContent();
         }
-        
+
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteCurrency(Guid id)
@@ -88,6 +98,56 @@ namespace CurrencyAPI.API.Controllers
 
             await _currencyService.DeleteCurrencyAsync(id);
             return NoContent();
+        }
+        
+
+        [HttpGet("{id}/history")]
+        public async Task<IActionResult> GetHistory(Guid id, DateTime? start, DateTime? end)
+        {
+            var exists = await _currencyService.GetCurrencyDetailsAsync(id);
+            if (exists == null)
+                return NotFound();
+
+            var history = await _currencyService.GetHistoryAsync(id, start, end);
+            return Ok(history);
+        }
+
+        // GET api/currencies/convert?from=USD&to=EUR&amount=100
+        [HttpGet("convert")]
+        public async Task<IActionResult> Convert(string from, string to, decimal amount)
+        {
+            var currencyFrom = await _currencyService.GetLastPriceBySymbolAsync(from);
+            var currencyTo = await _currencyService.GetLastPriceBySymbolAsync(to);
+            decimal conversionRate = 0;
+
+            if (currencyFrom.Backing == currencyTo.Backing)
+            {
+                decimal valueFrom = currencyFrom.Symbol == currencyFrom.Backing
+                    ? 1 : currencyFrom.Reverse
+                        ? 1 / currencyFrom.LastPrice.Value
+                        : currencyFrom.LastPrice.Value;
+
+                decimal valueTo = currencyTo.Symbol == currencyTo.Backing
+                    ? 1 : currencyTo.Reverse
+                        ? 1 / currencyTo.LastPrice.Value
+                        : currencyTo.LastPrice.Value;
+
+                conversionRate = valueFrom / valueTo;
+            }
+
+            decimal value = amount * conversionRate;
+
+            var ret = new
+            {
+                From = currencyFrom,
+                To = currencyTo,
+                Amount = amount,
+                Rate = conversionRate,
+                Value = value,
+            };
+
+
+            return Ok(ret);
         }
     }
 }

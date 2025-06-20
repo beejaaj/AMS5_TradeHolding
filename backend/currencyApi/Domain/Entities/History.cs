@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System;
 
 namespace CurrencyAPI.Domain.Entities
@@ -8,8 +10,9 @@ namespace CurrencyAPI.Domain.Entities
         public Guid CurrencyId { get; set; }
         public DateTime Date { get; set; }
         public decimal Value { get; set; }
-        
+
         // Propriedade de navegação
+        [JsonIgnore]
         public Currency Currency { get; set; }
 
         public History(Guid currencyId, decimal Value, DateTime date)

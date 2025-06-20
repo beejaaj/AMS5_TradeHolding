@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CurrencyAPI.Application.Interfaces;
 using CurrencyAPI.Domain.Entities;
 using CurrencyAPI.Domain.Interfaces;
+using CurrencyAPI.API.DTOs;
 
 namespace CurrencyAPI.Application.Services
 {
@@ -16,7 +17,7 @@ namespace CurrencyAPI.Application.Services
             _currencyRepository = currencyRepository;
         }
 
-         public async Task RegisterCurrencyAsync(Currency currency)
+        public async Task RegisterCurrencyAsync(Currency currency)
         {
             await _currencyRepository.RegisterCurrencyAsync(currency);
         }
@@ -41,11 +42,21 @@ namespace CurrencyAPI.Application.Services
         {
             await _currencyRepository.UpdateCurrencyAsync(currency);
         }
-        
+
 
         public async Task DeleteCurrencyAsync(Guid id)
         {
             await _currencyRepository.DeleteCurrencyAsync(id);
+        }
+
+        public async Task<IEnumerable<History>> GetHistoryAsync(Guid currencyId, DateTime? start, DateTime? end)
+        {
+            return await _currencyRepository.GetHistoryAsync(currencyId, start, end);
+        }
+        
+         public async Task<CurrencyWithLastPriceDto?> GetLastPriceBySymbolAsync(string symbol)
+        {
+            return await _currencyRepository.GetLastPriceBySymbolAsync(symbol);
         }
 
     }

@@ -11,6 +11,7 @@ namespace CurrencyAPI.API.DTOs
         public string Description { get; set; }
         public string Backing { get; set; }
         public string Status { get; set; }
+        public bool Reverse { get; set; } = false;
         public List<HistoryDTO> Histories { get; set; } = new();
     }
 }

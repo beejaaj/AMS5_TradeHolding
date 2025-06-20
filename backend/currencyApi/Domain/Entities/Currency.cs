@@ -12,13 +12,14 @@ namespace CurrencyAPI.Domain.Entities
         public string Description { get; set; }
         public string Backing { get; set; }
         public string Status { get; set; }
+        public bool Reverse { get; private set; } = false;
 
 
         // Relacionamento: 1 Currency tem N Histories
         private readonly List<History> _histories = new();
         public IReadOnlyCollection<History> Histories => _histories.AsReadOnly();
 
-        public Currency(string symbol, string description, string name, string status, string backing)
+        public Currency(string symbol, string description, string name, string status, string backing, bool reverse = false)
         {
             Id = Guid.NewGuid();
             SetSymbol(symbol);
@@ -26,6 +27,7 @@ namespace CurrencyAPI.Domain.Entities
             SetName(name);
             SetStatus(status);
             SetBacking(backing);
+            SetReverse(reverse);
         }
 
         public void RegisterAddHistory(History history)
@@ -76,6 +78,10 @@ namespace CurrencyAPI.Domain.Entities
                 throw new ArgumentException("status is required.");
 
             Status = status;
+        }
+        public void SetReverse(bool reverse)
+        {
+            Reverse = reverse;
         }
     }
 }

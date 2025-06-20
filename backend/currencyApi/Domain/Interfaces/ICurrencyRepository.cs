@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CurrencyAPI.Domain.Entities;
+using CurrencyAPI.API.DTOs;
 
 namespace CurrencyAPI.Domain.Interfaces
 {
@@ -14,6 +15,7 @@ namespace CurrencyAPI.Domain.Interfaces
         Task UpdateCurrencyAsync(Currency currency);
         Task DeleteCurrencyAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
-        
+        Task<IEnumerable<History>> GetHistoryAsync(Guid currencyId, DateTime? start, DateTime? end);
+        Task<CurrencyWithLastPriceDto?> GetLastPriceBySymbolAsync(string symbol);
     }
 }

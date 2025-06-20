@@ -18,6 +18,13 @@ namespace CurrencyAPI.Infrastructure.Repositories
             _context = context;
         }
 
+        public async Task<IEnumerable<History>> GetAllAsync()
+        {
+            return await _context.Histories
+                .AsNoTracking()
+                .OrderByDescending(h => h.Date)
+                .ToListAsync();
+        }
         public async Task<History?> GetHistoryDetailsAsync(Guid id)
         {
             return await _context.Histories.FindAsync(id);
