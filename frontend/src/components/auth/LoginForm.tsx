@@ -33,7 +33,7 @@ export const LoginForm = () => {
       const nameFromEmail = email.split('@')[0];
       localStorage.setItem('user', JSON.stringify({ name: nameFromEmail }));
       setSuccess('Login realizado com sucesso!');
-      router.push('/users');
+      router.push('/');
     } catch (err: any) {
       setError(err.message || 'Erro ao efetuar login.');
     } finally {

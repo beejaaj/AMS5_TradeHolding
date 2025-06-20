@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { userAPI } from "@/services/API";
-import { FaPen, FaUserAlt } from 'react-icons/fa';
+import { FaUserAlt } from 'react-icons/fa';
+import Link from 'next/link';
 import './EditProfile.css'
 import { User } from "@/services/userService";
 
@@ -36,30 +37,38 @@ export const EditProfile = ({ params }: { params: { id: string } }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-      
+
         try {
-          const res = await fetch(userAPI.edit(params.id), {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(user)
-          });
-          if (!res.ok) throw new Error('Erro ao atualizar usuário');
-          setSuccess('Usuário atualizado com sucesso!');
-          router.push(`/users/profile/${params.id}`);
+            const res = await fetch(userAPI.edit(params.id), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            });
+            if (!res.ok) throw new Error('Erro ao atualizar usuário');
+            setSuccess('Usuário atualizado com sucesso!');
+            router.push(`/users/profile/${params.id}`);
         } catch (err: any) {
-          setError(err.message);
+            setError(err.message);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
+    };
 
     return (
         <div className="edit-profile-container">
+
             <form onSubmit={handleSubmit} className="edit-profile-form">
                 <h1 className="edit-profile-title">Editar Perfil</h1>
+                <Link href="/users" className="back-button">
+                    <button aria-label="Voltar para home" className="back-button-inner">
+                        <svg className="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </Link>
                 {error && <div className="error-message">{error}</div>}
                 {success && <div className="success-message">{success}</div>}
-                <FaUserAlt size={24} className="profile-avatar"/>
+                <FaUserAlt size={24} className="profile-avatar" />
                 <input
                     type="text"
                     name="photo"
@@ -103,7 +112,7 @@ export const EditProfile = ({ params }: { params: { id: string } }) => {
                     placeholder="Digite sua nova senha"
                     value={user.password}
                     onChange={handleChange}
-                    required   
+                    required
                 />
                 <button type="submit" className="submit-btn" disabled={loading}>
                     {loading ? 'Salvando...' : 'Salvar Alterações'}

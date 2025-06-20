@@ -1,15 +1,24 @@
 "use client";
 import dynamic from "next/dynamic";
+import { useState, useEffect } from 'react';
 import { Header } from "@/components/common/Header";
 import Link from "next/link";
-// Evita erro de SSR com Chart.js
+
 const CryptoPieChart = dynamic(() => import("../components/CryptoPieChart"), {
   ssr: false,
 });
+
 export default function Home() {
+  const [isLogged, setIsLogged] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLogged(!!token);
+  }, []);
+
   return (
     <>
-         <Header />
+      <Header />
       <div className="flex flex-col items-center justify-center min-h-screen bg-main text-white px-4 py-12">
         <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">
           Bem-vindo à Lunaria
@@ -18,19 +27,21 @@ export default function Home() {
           Uma nova oportunidade de investimentos para a sua vida.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-12">
-          <Link href="/users/login">
-            <button className="bg-panel text-white py-2 px-6 rounded-md hover:bg-purple-800 transition duration-200">
-              Login
-            </button>
-          </Link>
-          <Link href="/users/create">
-            <button className="bg-transparent border border-panel text-panel py-2 px-6 rounded-md hover:bg-panel hover:text-white transition duration-200">
-              Cadastro
-            </button>
-          </Link>
-        </div>
-        {/* TABELA FICTÍCIA DE CRIPTOMOEDAS */}
+        {!isLogged && (
+          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+            <Link href="/users/login">
+              <button className="bg-panel text-white py-2 px-6 rounded-md hover:bg-purple-800 transition duration-200">
+                Login
+              </button>
+            </Link>
+            <Link href="/users/create">
+              <button className="bg-transparent border border-panel text-panel py-2 px-6 rounded-md hover:bg-panel hover:text-white transition duration-200">
+                Cadastro
+              </button>
+            </Link>
+          </div>
+        )}
+
         <div className="w-full max-w-4xl mx-auto">
           <h2 className="text-2xl font-semibold text-title mb-4 text-center">
             Mercado de Cripto (Lunaria)
@@ -80,7 +91,6 @@ export default function Home() {
             </table>
           </div>
         </div>
-        {/* Gráfico redondo */}
         <CryptoPieChart />
       </div>
     </>
