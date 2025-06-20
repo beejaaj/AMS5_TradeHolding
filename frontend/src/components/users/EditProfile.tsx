@@ -6,6 +6,7 @@ import { userAPI } from "@/services/API";
 import { FaUserAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import './EditProfile.css'
+import Link from 'next/link';
 import { User } from "@/services/userService";
 
 export const EditProfile = ({ params }: { params: { id: string } }) => {
@@ -58,6 +59,13 @@ export const EditProfile = ({ params }: { params: { id: string } }) => {
         <div className="edit-profile-container">
 
             <form onSubmit={handleSubmit} className="edit-profile-form">
+                <Link href="/users" className="back-button">
+                    <button aria-label="Voltar para home" className="back-button-inner">
+                        <svg className="arrow-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                    </button>
+                </Link>
                 <h1 className="edit-profile-title">Editar Perfil</h1>
                 <Link href="/users" className="back-button">
                     <button aria-label="Voltar para home" className="back-button-inner">

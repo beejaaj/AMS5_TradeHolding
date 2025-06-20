@@ -75,47 +75,47 @@ export const AllUsers = () => {
             {loading ? (
                 <p className="loading">Carregando...</p>
             ) : (
-                <table className="users-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Telefone</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map((user: any) => (
-                            <tr key={user.id}>
-                                <td>{user.name}</td>
-                                <td>{user.email}</td>
-                                <td>{user.phone}</td>
-                                <td className="actions">
-                                    <Link href={`/users/profile/${user.id}`} className="view-btn">
-                                        <FaEye />
-                                    </Link>
-                                    <Link href={`/users/edit/${user.id}`} className="update-btn">
-                                        <FaPen />
-                                    </Link>
-                                    <button
-                                        onClick={() => handleDelete(user.id)}
-                                        className="delete-btn"
-                                        disabled={deletingId === user.id}
-                                    >
-                                        {deletingId === user.id ? (
-                                            <span className="spinner"></span>
-                                        ) : (
-                                            <FaTrash />
-                                        )}
-                                    </button>
-                                </td>
+                <div className="users-table-wrapper">
+                    <table className="users-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefone</th>
+                                <th>Ações</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {users.map((user: any) => (
+                                <tr key={user.id}>
+                                    <td>{user.name}</td>
+                                    <td>{user.email}</td>
+                                    <td>{user.phone}</td>
+                                    <td className="actions">
+                                        <Link href={`/users/profile/${user.id}`} className="view-btn">
+                                            <FaEye />
+                                        </Link>
+                                        <Link href={`/users/edit/${user.id}`} className="update-btn">
+                                            <FaPen />
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDelete(user.id)}
+                                            className="delete-btn"
+                                            disabled={deletingId === user.id}
+                                        >
+                                            {deletingId === user.id ? (
+                                                <span className="spinner"></span>
+                                            ) : (
+                                                <FaTrash />
+                                            )}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
-
-
-    );
+    );    
 };
