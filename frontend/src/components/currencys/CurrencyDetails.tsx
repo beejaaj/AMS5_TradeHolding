@@ -48,7 +48,7 @@ export const CurrencyDetails = ({
   if (!currency) {
     return (
       <div className="currency-placeholder">
-        Para ver os detalhes de uma moeda, selecione uma na lista da esquerda
+        Para ver os detalhes de uma moeda, selecione na lista de moedas
       </div>
     );
   }

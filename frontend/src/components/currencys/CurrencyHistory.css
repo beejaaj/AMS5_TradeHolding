@@ -2,6 +2,8 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  /* mostra só 6 linhas de dados (2.5rem cada) + cabeçalho (3.5rem) */
+  max-height: calc(6 * 2.5rem + 3.5rem);
   overflow-y: auto;
   padding-top: 0.5rem;
   font-family: 'Poppins', sans-serif;
@@ -12,10 +14,32 @@
   width: 100%;
   border-collapse: collapse;
   background-color: #1a1a1a;
+
+  /* layout flex para manter thead fixo e tbody rolável */
+  display: flex;
+  flex-direction: column;
 }
 
 .history-table thead {
+  flex: 0 0 auto;
   background-color: #2a2a2a;
+}
+
+.history-table tbody {
+  flex: 1 1 auto;
+  display: block;
+  overflow-y: auto;
+}
+
+.history-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-bottom: 1px solid #222;
+}
+
+.history-table tr:hover {
+  background-color: #2f2f2f;
 }
 
 .history-table th,
@@ -30,14 +54,6 @@
   font-size: 0.9rem;
   text-transform: uppercase;
   border-bottom: 1px solid #333;
-}
-
-.history-table tr {
-  border-bottom: 1px solid #222;
-}
-
-.history-table tr:hover {
-  background-color: #2f2f2f;
 }
 
 .history-date {
@@ -72,4 +88,28 @@
   text-align: center;
   color: #aaa;
   margin-top: 1rem;
+}
+
+/* Responsividade para telas estreitas (mantém altura fixa) */
+@media (max-width: 600px) {
+  .history-container {
+    /* mantém limite de 6 itens mesmo no mobile */
+    max-height: calc(6 * 2.5rem + 3.5rem);
+  }
+
+  .history-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .history-table thead,
+  .history-table tbody {
+    display: block;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
 }
