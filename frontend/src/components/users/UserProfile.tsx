@@ -64,13 +64,13 @@ export const UserProfile = ({ params }: { params: { id: string } }) => {
                     const data = await res.json();
                     message = data.message || message;
                 } catch (e) {
- 
+
                 }
                 throw new Error(message);
             }
 
             alert('Usuário excluído com sucesso!');
-            router.push('/users'); 
+            router.push('/users');
         } catch (err: any) {
             console.error(err);
             setError(err.message || 'Erro ao excluir usuário');
@@ -82,6 +82,13 @@ export const UserProfile = ({ params }: { params: { id: string } }) => {
     return (
         <div className="profile-container">
             <div className="profile-content">
+                <Link href="/users" className="back-button">
+                    <button aria-label="Voltar para home" className="back-button-inner">
+                        <svg className="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </Link>
                 <h1 className="profile-title">Perfil de {user?.name}</h1>
                 {error && <div className="error-message">{error}</div>}
                 {loading ? (

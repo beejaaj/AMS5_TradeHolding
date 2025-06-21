@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authorization;
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
@@ -25,13 +25,17 @@ public class UserController : ControllerBase
         return Ok(users);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public IActionResult GetUserDetails(int id)
     {
+        
+
         var user = _userService.GetUserDetails(id);
         return user != null ? Ok(user) : NotFound();
     }
 
+    [Authorize]
     [HttpPut("{id}")]
     public IActionResult UpdateUser(int id, UserDTO userDto)
     {
@@ -39,6 +43,7 @@ public class UserController : ControllerBase
         return updatedUser != null ? Ok(updatedUser) : NotFound();
     }
 
+    [Authorize]
     [HttpDelete("{id}")]
     public IActionResult DeleteUser(int id)
     {

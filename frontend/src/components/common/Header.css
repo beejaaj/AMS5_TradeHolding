@@ -1,22 +1,22 @@
 .header {
-    background-color: transparent; 
+    background-color: transparent;
     position: relative;
-    top: 20px; 
+    top: 20px;
     left: 0;
     right: 0;
-    height: 60px; 
+    height: 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px; 
+    padding: 0 20px;
     box-shadow: none;
-    border-bottom: 2px solid #6a2c91; 
-    padding-bottom: 23px; 
+    border-bottom: 2px solid #6a2c91;
+    padding-bottom: 23px;
 }
 
 .users-container {
     padding: 3rem 1rem;
-    padding-top: 80px; 
+    padding-top: 80px;
     font-family: 'Poppins', sans-serif;
     background-color: transparent;
 }
