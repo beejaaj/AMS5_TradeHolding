@@ -32,8 +32,8 @@ const historyAPI = crhistoryAPI(`${BASE_GATEWAY_URL}/history`);
 const authAPI = {
   login: () => `${BASE_GATEWAY_URL}/auth/login`,
   profile: () => `${BASE_GATEWAY_URL}/auth/profile`,
-  logout: () => `${BASE_GATEWAY_URL}/auth/logout`,         // Supondo que você queira implementar
-  refreshToken: () => `${BASE_GATEWAY_URL}/auth/refreshtoken`, // Supondo que esteja no backend
+  logout: () => `${BASE_GATEWAY_URL}/auth/logout`,         
+  refreshToken: () => `${BASE_GATEWAY_URL}/auth/refreshtoken`, 
 };
 
 export { userAPI, authAPI, currencyAPI, historyAPI };

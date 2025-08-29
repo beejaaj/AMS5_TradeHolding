@@ -11,6 +11,7 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
+    [Authorize]
     [HttpPost]
     public IActionResult RegisterUser(UserDTO userDto)
     {
@@ -18,6 +19,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize]
     [HttpGet]
     public IActionResult GetAllUsers()
     {
