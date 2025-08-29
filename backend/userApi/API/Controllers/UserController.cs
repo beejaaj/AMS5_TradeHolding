@@ -11,7 +11,6 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [Authorize]
     [HttpPost]
     public IActionResult RegisterUser(UserDTO userDto)
     {
