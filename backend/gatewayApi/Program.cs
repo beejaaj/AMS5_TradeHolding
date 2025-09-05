@@ -8,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 
-builder.Services.AddAuthentication("AuthGateway")
-    .AddJwtBearer("AuthGateway", options =>
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
     {
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters

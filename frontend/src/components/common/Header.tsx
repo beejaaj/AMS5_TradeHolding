@@ -27,7 +27,7 @@ export const Header = () => {
   // Logout
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
     setIsLogged(false);
     window.location.href = '/users/login';
   };

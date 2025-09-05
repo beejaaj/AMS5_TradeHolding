@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authAPI } from "@/services/API";
 import Link from "next/link";
@@ -15,6 +15,14 @@ export const LoginForm = () => {
   const [success, setSuccess] = useState("");
   const router = useRouter();
 
+  // Check if the user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/"); // Redirect to the homepage if token exists
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -27,18 +35,35 @@ export const LoginForm = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) throw new Error("Credenciais inválidas");
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Credenciais inválidas");
+      }
+
       const data = await res.json();
       localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.userId || "");
+      console.log("Token gerado:", email);
+      localStorage.setItem("userEmail", email || "");
       setSuccess("Login realizado com sucesso!");
-      router.push("/");
+      router.push("/"); // Redirect to homepage after successful login
     } catch (err: any) {
       setError(err.message || "Erro ao efetuar login.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Clear error/success messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccess("");
+      }, 5000);
+      return () => clearTimeout(timer); // Cleanup timer
+    }
+  }, [error, success]);
 
   return (
     <div className="login-container bg-main text-white">
@@ -114,7 +139,7 @@ export const LoginForm = () => {
           </div>
 
           <button type="submit" disabled={loading} className="submit-button">
-            {loading ? "Processando..." : "Entrar"}
+            {loading ? <span className="spinner"></span> : "Entrar"}
           </button>
         </form>
 

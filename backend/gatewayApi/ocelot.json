@@ -143,7 +143,7 @@
                 "GET"
             ],
             "AuthenticationOptions": {
-                "AuthenticationProviderKey": "AuthGateway",
+                "AuthenticationProviderKey": "Bearer",
                 "AllowedScopes": []
             }
         },
@@ -161,7 +161,7 @@
                 "GET"
             ],
             "AuthenticationOptions": {
-                "AuthenticationProviderKey": "AuthGateway",
+                "AuthenticationProviderKey": "Bearer",
                 "AllowedScopes": []
             }
         },
@@ -195,7 +195,7 @@
                 "DELETE"
             ],
             "AuthenticationOptions": {
-                "AuthenticationProviderKey": "AuthGateway",
+                "AuthenticationProviderKey": "Bearer",
                 "AllowedScopes": []
             }
         }

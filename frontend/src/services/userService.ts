@@ -14,7 +14,7 @@ export interface User {
 const userService = {
     async getAll(): Promise<User[]> {
         const token = localStorage.getItem("token");
-
+        console.log("Token gerado:", token);
         const response = await axios.get(userAPI.getAll(), {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -22,7 +22,6 @@ const userService = {
                 'Access-Control-Allow-Origin': '*'
             }
         });
-
         return response.data;
     }
 };
