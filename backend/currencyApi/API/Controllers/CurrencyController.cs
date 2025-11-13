@@ -18,7 +18,7 @@ namespace CurrencyAPI.API.Controllers
         {
             _currencyService = currencyService;
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> RegisterCurrency([FromBody] CurrencyDTO dto)
         {

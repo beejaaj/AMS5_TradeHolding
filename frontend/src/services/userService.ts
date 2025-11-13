@@ -1,7 +1,7 @@
 import axios from "axios";
-import {userAPI} from "./API";
+import { userAPI } from "./API";
 
-export interface User{
+export interface User {
     id?: number;
     name: string;
     email: string;
@@ -12,16 +12,18 @@ export interface User{
 }
 
 const userService = {
-    async getAll() : Promise<User[]>{
-        const header = {
+    async getAll(): Promise<User[]> {
+        const token = localStorage.getItem("token");
+        console.log("Token gerado:", token);
+        const response = await axios.get(userAPI.getAll(), {
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             }
-        }
-        const response = await axios.get(userAPI.getAll(), header);
-        return response.data;   
+        });
+        return response.data;
     }
-}
+};
 
 export default userService;
