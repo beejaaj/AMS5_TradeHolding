@@ -18,6 +18,7 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize]
     [HttpGet]
     public IActionResult GetAllUsers()
     {

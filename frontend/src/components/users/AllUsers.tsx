@@ -17,7 +17,7 @@ export const AllUsers = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
+    console.log("Token gerado:", token);
     if (!token) {
       router.push("/users/login");
       return;
