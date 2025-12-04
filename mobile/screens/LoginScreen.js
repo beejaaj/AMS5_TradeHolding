@@ -14,8 +14,8 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons"; 
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authAPI } from "../services/API";
 // Se você tiver o arquivo de API configurado no React Native, importe aqui.
 // Caso contrário, use a URL direta no fetch.
 // import { authAPI } from "@/services/API"; 
@@ -28,13 +28,17 @@ export default function LoginScreen({ navigation }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Verificar token ao montar
+ // Verificar token ao montar (Auto-Login)
   useEffect(() => {
     const checkToken = async () => {
-      // const token = await AsyncStorage.getItem("token");
-      const token = null; // Simulação
-      if (token) {
-        navigation.replace("Home"); // Redireciona sem deixar voltar
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (token) {
+          // Se já tem token, vai direto para Home
+          navigation.replace("Home"); 
+        }
+      } catch (e) {
+        console.log("Erro ao verificar token inicial", e);
       }
     };
     checkToken();
@@ -62,39 +66,51 @@ export default function LoginScreen({ navigation }) {
     setSuccess("");
 
     try {
-      // --- LÓGICA DE API (Descomente e ajuste para sua URL real) ---
-      /*
-      const response = await fetch("SUA_URL_API/login", {
+      console.log("Tentando login em:", authAPI.login());
+
+      // --- LÓGICA DE API REAL ---
+      const response = await fetch(authAPI.login(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json" 
+        },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      // Tenta ler o JSON. Se a API retornar erro HTML (comum em erros de servidor), isso vai falhar
+      const data = await response.json().catch(() => {
+          throw new Error("Erro de comunicação com o servidor (Resposta inválida).");
+      });
 
       if (!response.ok) {
-        throw new Error(data.message || "Credenciais inválidas");
+        // Usa a mensagem do backend ou uma genérica
+        throw new Error(data.message || "Credenciais inválidas ou erro no servidor.");
       }
 
-      // Salvar Token
-      await AsyncStorage.setItem("token", data.token);
-      await AsyncStorage.setItem("userEmail", email);
-      */
+      if (!data.token) {
+          throw new Error("Token não recebido. Contate o suporte.");
+      }
 
-      // --- SIMULAÇÃO (Para testar o layout) ---
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      if (email === "erro") throw new Error("Usuário não encontrado");
+      // --- SUCESSO ---
+      console.log("Login OK! Token recebido:", data.token);
+
+      // Salvar Token no Armazenamento do Celular
+      await AsyncStorage.setItem("token", data.token);
       
+      // Opcional: Salvar email para usar depois
+      await AsyncStorage.setItem("userEmail", email);
+
       setSuccess("Login realizado com sucesso!");
-      console.log("Token gerado para:", email);
       
-      // Pequeno delay para usuário ver a mensagem de sucesso
+      // Redireciona para a Home após breve delay
       setTimeout(() => {
-        navigation.replace("Home"); // Vai para a Home
+        navigation.replace("Home"); 
       }, 500);
 
     } catch (err) {
-      setError(err.message || "Erro ao efetuar login.");
+      console.error("Erro no Login:", err);
+      setError(err.message || "Erro ao efetuar login. Verifique sua conexão.");
     } finally {
       setLoading(false);
     }

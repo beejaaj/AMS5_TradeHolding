@@ -13,11 +13,13 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons"; 
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from "@react-navigation/native";
 
-// import { userAPI } from "@/services/API"; // Se tiver configurado
+import userService from "../services/userService";
 
-export default function CreateAccountScreen({ navigation }) {
+export default function CreateAccountScreen() {
+  const navigation = useNavigation();
+
   // Estados do Formulário
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -49,32 +51,20 @@ export default function CreateAccountScreen({ navigation }) {
     setError('');
     
     try {
+      // Cria o objeto conforme a interface User definida no TypeScript
       const userPayload = { 
         name,
         email,
         phone,
         address,
         password,
-        photo: photoUrl
+        photo: photoUrl // Mapeando photoUrl do input para 'photo' da API
       };
 
-      // --- CHAMADA DE API REAL (Descomente e ajuste) ---
-      /*
-      const res = await fetch('SUA_URL_AQUI/users', { // userAPI.create()
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userPayload),
-      });
+      console.log("Enviando dados:", userPayload);
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || 'Falha no cadastro');
-      }
-      */
-
-      // --- SIMULAÇÃO ---
-      await new Promise(r => setTimeout(r, 2000));
-      console.log("Payload:", userPayload);
+      // 2. CHAMADA REAL DA API VIA SERVICE
+      await userService.create(userPayload);
 
       setSuccess('Cadastro realizado com sucesso!');
       
@@ -84,7 +74,10 @@ export default function CreateAccountScreen({ navigation }) {
       }, 1500);
 
     } catch (err) {
-      setError(err.message || 'Erro ao cadastrar usuário.');
+      console.error("Erro no cadastro:", err);
+      // Tenta pegar a mensagem de erro específica do backend
+      const message = err.response?.data?.message || err.message || 'Erro ao cadastrar usuário.';
+      setError(message);
     } finally {
       setLoading(false);
     }

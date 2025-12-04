@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { 
   StyleSheet, 
   Text, 
@@ -8,12 +8,13 @@ import {
   Alert 
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Importe seu Header customizado
 import { Header } from "../components/Header";
-// Se for usar verificação real de token no futuro:
-// import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Dados vindos do seu código Web
+// Dados Mockados (Você pode substituir pela chamada do currencyService futuramente)
 const CRYPTO_DATA = [
   { pair: 'BTC/USDT', price: '$63,200.12', change: '+2.15%', vol: '$1.5B', isUp: true },
   { pair: 'ETH/USDT', price: '$3,420.89', change: '-1.02%', vol: '$800M', isUp: false },
@@ -25,20 +26,37 @@ const CRYPTO_DATA = [
 export default function HomeScreen({ navigation }) {
   const [isLogged, setIsLogged] = useState(false);
 
-  useEffect(() => {
-    // Simulação da verificação do token (como no seu localStorage)
-    const checkLogin = async () => {
-      // Exemplo real seria: const token = await AsyncStorage.getItem('token');
-      const token = null; // Mude para "sim" para testar o estado logado
-      setIsLogged(!!token);
-    };
-    checkLogin();
-  }, []);
+  // useFocusEffect: Executa toda vez que a tela ganha foco (ex: voltando do Login)
+  useFocusEffect(
+    useCallback(() => {
+      const checkLogin = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          // Se tiver token, converte para true, senão false
+          setIsLogged(!!token); 
+        } catch (error) {
+          console.log("Erro ao verificar login:", error);
+        }
+      };
+      checkLogin();
+    }, [])
+  );
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userEmail');
+      setIsLogged(false);
+      Alert.alert("Sucesso", "Você saiu da conta.");
+    } catch (error) {
+      console.log("Erro ao sair:", error);
+    }
+  };
 
   return (
-    
     <View style={styles.container}>
-      <Header />
+      {/* O Header já deve ter a lógica de navegação interna se precisar */}
+      <Header /> 
       <StatusBar style="light" />
       
       <ScrollView 
@@ -48,7 +66,7 @@ export default function HomeScreen({ navigation }) {
         {/* Header / Logo Area */}
         <View style={styles.headerContainer}>
           <View style={styles.logo}>
-             {/* Você pode colocar um <Image /> aqui */}
+             {/* Placeholder da Logo */}
              <Text style={{fontSize: 30}}>🌑</Text> 
           </View>
           <Text style={styles.title}>Bem-vindo à Lunaria</Text>
@@ -57,43 +75,51 @@ export default function HomeScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* Botões de Ação (Condicional igual ao Web) */}
+        {/* LÓGICA DE BOTÕES: Login/Cadastro ou Dashboard */}
         {!isLogged ? (
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity 
               style={[styles.button, styles.buttonPrimary]}
-              onPress={() => navigation.navigate("Login")} // Certifique-se que essa rota existe
+              onPress={() => navigation.navigate("Login")} 
             >
               <Text style={styles.buttonTextPrimary}>Login</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               style={[styles.button, styles.buttonOutline]}
-              onPress={() => navigation.navigate("CreateAccount")} // Certifique-se que essa rota existe
+              onPress={() => navigation.navigate("CreateAccount")}
             >
               <Text style={styles.buttonTextOutline}>Cadastro</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.actionButtonsContainer}>
-             <TouchableOpacity style={[styles.button, styles.buttonPrimary]}>
-              <Text style={styles.buttonTextPrimary}>Ir para Dashboard</Text>
+             <TouchableOpacity 
+                style={[styles.button, styles.buttonPrimary]}
+                onPress={() => navigation.navigate("AllUsers")} // Exemplo: Ir para lista de usuários
+             >
+              <Text style={styles.buttonTextPrimary}>Ver Usuários</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+                style={[styles.button, styles.buttonOutline]}
+                onPress={() => navigation.navigate("CurrencyList")} // Exemplo: Ir para lista de moedas
+             >
+              <Text style={styles.buttonTextOutline}>Ver Moedas</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Tabela de Mercado (Adaptada para Mobile) */}
+        {/* Tabela de Mercado */}
         <View style={styles.marketContainer}>
           <Text style={styles.sectionTitle}>Mercado de Cripto (Lunaria)</Text>
           
-          {/* Cabeçalho da Lista */}
           <View style={styles.tableHeader}>
             <Text style={[styles.headerText, { flex: 2 }]}>Par</Text>
             <Text style={[styles.headerText, { flex: 2, textAlign: 'right' }]}>Preço</Text>
             <Text style={[styles.headerText, { flex: 1.5, textAlign: 'right' }]}>24h %</Text>
           </View>
 
-          {/* Lista de Moedas */}
           {CRYPTO_DATA.map((coin, index) => (
             <View key={index} style={styles.coinRow}>
               <View style={{ flex: 2 }}>
@@ -105,7 +131,7 @@ export default function HomeScreen({ navigation }) {
               
               <Text style={[
                 styles.coinChange, 
-                { flex: 1.5, color: coin.isUp ? "#4ade80" : "#f87171" } // Green-400 : Red-400
+                { flex: 1.5, color: coin.isUp ? "#4ade80" : "#f87171" }
               ]}>
                 {coin.change}
               </Text>
@@ -113,7 +139,7 @@ export default function HomeScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Placeholder do Gráfico (CryptoPieChart) */}
+        {/* Gráfico Placeholder */}
         <View style={styles.chartContainer}>
           <Text style={styles.sectionTitle}>Distribuição</Text>
           <View style={styles.chartPlaceholder}>
@@ -122,12 +148,13 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
+        {/* Botão de Logout (Só aparece se logado) */}
         {isLogged && (
           <TouchableOpacity 
             style={styles.logoutButton}
-            onPress={() => setIsLogged(false)}
+            onPress={handleLogout}
           >
-            <Text style={styles.logoutText}>Sair</Text>
+            <Text style={styles.logoutText}>Sair da conta</Text>
           </TouchableOpacity>
         )}
 
@@ -139,29 +166,30 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000", // bg-main
+    backgroundColor: "#000",
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 20, // Ajustado pois já tem o Header em cima
     alignItems: "center",
   },
   
-  // Header
+  // Header Area
   headerContainer: {
     alignItems: "center",
     marginBottom: 30,
+    marginTop: 10,
   },
   logo: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#5c1a75", // Roxo escuro
+    backgroundColor: "#5c1a75",
     marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#a855f7' // Highlight roxo mais claro
+    borderColor: '#a855f7'
   },
   title: { 
     fontSize: 28, 
@@ -185,16 +213,17 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     width: "100%",
     justifyContent: "center",
+    flexWrap: 'wrap' // Permite quebrar linha se tela for pequena
   },
   button: {
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     borderRadius: 8,
     minWidth: 120,
     alignItems: "center",
   },
   buttonPrimary: {
-    backgroundColor: "#5c1a75", // bg-panel
+    backgroundColor: "#5c1a75",
   },
   buttonOutline: {
     backgroundColor: "transparent",
@@ -204,11 +233,11 @@ const styles = StyleSheet.create({
   buttonTextPrimary: { color: "#fff", fontWeight: "600", fontSize: 16 },
   buttonTextOutline: { color: "#d8b4fe", fontWeight: "600", fontSize: 16 },
 
-  // Market Table List
+  // Market Table
   marketContainer: {
     width: "100%",
     marginBottom: 30,
-    backgroundColor: "#1a001f", // bg de fundo levemente roxo
+    backgroundColor: "#1a001f",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -217,7 +246,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#fff", // text-title
+    color: "#fff",
     marginBottom: 16,
     textAlign: "center",
   },
@@ -229,7 +258,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerText: {
-    color: "#d8b4fe", // roxo claro para titulos
+    color: "#d8b4fe",
     fontSize: 14,
     fontWeight: "bold",
   },
@@ -263,7 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     borderWidth: 15,
     borderColor: "#5c1a75",
-    borderTopColor: "#a855f7", // Simular fatias
+    borderTopColor: "#a855f7",
     borderRightColor: "#d8b4fe",
   },
   chartText: {
@@ -274,12 +303,17 @@ const styles = StyleSheet.create({
 
   // Logout
   logoutButton: {
-    padding: 10,
+    padding: 15,
     width: "100%",
     alignItems: "center",
+    backgroundColor: '#1a001f',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333'
   },
   logoutText: {
     color: "#f87171",
     fontSize: 16,
+    fontWeight: 'bold'
   }
 });
