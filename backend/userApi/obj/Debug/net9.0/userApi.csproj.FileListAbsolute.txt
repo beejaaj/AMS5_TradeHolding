@@ -872,3 +872,4 @@ C:\Users\0031432412023\Downloads\AMS5_TradeHolding\backend\userapi\obj\Debug\net
 C:\Users\0031432412023\Downloads\AMS5_TradeHolding\backend\userapi\obj\Debug\net9.0\userApi.pdb
 C:\Users\0031432412023\Downloads\AMS5_TradeHolding\backend\userapi\obj\Debug\net9.0\userApi.genruntimeconfig.cache
 C:\Users\0031432412023\Downloads\AMS5_TradeHolding\backend\userapi\obj\Debug\net9.0\ref\userApi.dll
+C:\Users\gravi\Documents\Faculdade\Fatec\ANO 2\PROGRAMAÇÃO MULTIPLATAFORMA\AMS5-TRADEHOLDING\AMS5_TradeHolding\backend\userApi\bin\Debug\net9.0\package-lock.json
