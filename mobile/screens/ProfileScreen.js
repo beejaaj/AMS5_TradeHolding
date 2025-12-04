@@ -1,10 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { Header } from "../components/Header";
 
 export default function ProfileScreen({ navigation }) {
   return (
     <View style={styles.container}>
+      <Header />
       <TouchableOpacity
         style={{ alignSelf: "flex-start", marginBottom: 16 }}
         onPress={() => navigation.goBack()}
