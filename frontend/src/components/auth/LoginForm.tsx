@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authAPI } from "@/services/API";
+import { login } from "@/services/userService";
 import Link from "next/link";
-import "./loginForm.css";
+import { motion } from "framer-motion";
+import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft } from "lucide-react";
+import "./LoginForm.css";
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -15,13 +17,12 @@ export const LoginForm = () => {
   const [success, setSuccess] = useState("");
   const router = useRouter();
 
-  // Check if the user is already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      router.push("/"); // Redirect to the homepage if token exists
+      router.push("/");
     }
-  }, []);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,95 +31,81 @@ export const LoginForm = () => {
     setSuccess("");
 
     try {
-      const res = await fetch(authAPI.login(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Credenciais inválidas");
-      }
-
-      const data = await res.json();
-      localStorage.setItem("token", data.token);
-      console.log("Token gerado:", email);
-      localStorage.setItem("userEmail", email || "");
+      await login({ email, password });
       setSuccess("Login realizado com sucesso!");
-      router.push("/"); // Redirect to homepage after successful login
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
     } catch (err: any) {
-      setError(err.message || "Erro ao efetuar login.");
+      const msg = err.response?.data?.message || err.message || "Credenciais inválidas";
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Clear error/success messages after 5 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError("");
-        setSuccess("");
-      }, 5000);
-      return () => clearTimeout(timer); // Cleanup timer
-    }
-  }, [error, success]);
-
   return (
-    <div className="login-container bg-main text-white">
-      <div className="login-card">
-        <Link href="/" className="back-button">
-          <button
-            type="button"
-            aria-label="Voltar para home"
-            className="back-button-inner"
-          >
-            <svg
-              className="arrow-icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M15 18L9 12L15 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+    <div className="login-container">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="login-card"
+      >
+        <Link href="/" className="back-button" aria-label="Voltar para Home">
+          <ArrowLeft size={24} />
         </Link>
 
-        <h1 className="login-title">
-          <img src="/Lunaria.jpg" alt="Logo" className="login-logo" />
-        </h1>
-        <p className="login-header">
-          Este é o site oficial. Não compartilhe sua senha.
-        </p>
+        <div className="login-header">
+          {/* Logo Envolvido em Container para ajuste perfeito */}
+          <div className="login-logo-container">
+             <img src="/Lunaria.jpg" alt="Lunaria Logo" className="login-logo-img" />
+          </div>
+          <h2 className="login-title">Entrar na Conta</h2>
+          <p className="login-subtitle">Bem-vindo de volta à Lunaria</p>
+        </div>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="message-box error-message"
+          >
+            {error}
+          </motion.div>
+        )}
+        
+        {success && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="message-box success-message"
+          >
+            {success}
+          </motion.div>
+        )}
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email (ou seu nome de usuário)</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Digite seu email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-              required
-            />
+            <label htmlFor="email" className="form-label">Email</label>
+            <div className="input-wrapper">
+              <Mail size={18} className="input-icon" />
+              <input
+                id="email"
+                type="email"
+                placeholder="exemplo@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="form-input"
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Senha</label>
-            <div className="password-input-container">
+            <label htmlFor="password" className="form-label">Senha</label>
+            <div className="input-wrapper">
+              <Lock size={18} className="input-icon" />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -133,22 +120,32 @@ export const LoginForm = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="show-password-button"
               >
-                {showPassword ? "Ocultar senha" : "Visualizar senha"}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <Link href="/forgot-password" className="forgot-password">
+              Esqueceu a senha?
+            </Link>
           </div>
 
           <button type="submit" disabled={loading} className="submit-button">
-            {loading ? <span className="spinner"></span> : "Entrar"}
+            {loading ? (
+              <span className="spinner"></span>
+            ) : (
+              <>
+                Entrar <LogIn size={18} />
+              </>
+            )}
           </button>
         </form>
 
         <div className="register-link">
+          Ainda não tem conta?
           <Link href="/users/create">
-            Cadastre-se, caso não tenha uma conta
+            Registre-se grátis
           </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

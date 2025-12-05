@@ -1,11 +1,15 @@
 import { CurrencyDashboard } from "@/components/currencys/CurrencyDashboard";
-import { Header } from '@/components/common/Header';
+import NavBar from "@/components/NavBar"; // Importando a NavBar nova
 
-export default function Page() {
+export default function CurrencyPage() {
     return (
-        <div>
-            <Header />
-            <CurrencyDashboard />
+        <div className="min-h-screen bg-[#0B0E11]">
+            <NavBar />
+            
+            {/* Adicionado pt-20 para o conteúdo não ficar atrás da navbar fixa */}
+            <main className="pt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <CurrencyDashboard />
+            </main>
         </div>
     );
 }

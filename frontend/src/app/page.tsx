@@ -1,98 +1,117 @@
 "use client";
-import dynamic from "next/dynamic";
-import { useState, useEffect } from 'react';
-import { Header } from "@/components/common/Header";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import NavBar from "@/components/NavBar";
 
-const CryptoPieChart = dynamic(() => import("../components/CryptoPieChart"), {
-  ssr: false,
-});
+const initialData = [
+  { name: "00:00", btc: 42000 },
+  { name: "04:00", btc: 42500 },
+  { name: "08:00", btc: 41800 },
+  { name: "12:00", btc: 43200 },
+  { name: "16:00", btc: 44000 },
+  { name: "20:00", btc: 43800 },
+];
 
 export default function Home() {
-  const [isLogged, setIsLogged] = useState(false);
+  const [data, setData] = useState(initialData);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsLogged(!!token);
+    const interval = setInterval(() => {
+      setData((currentData) => {
+        const lastValue = currentData[currentData.length - 1].btc;
+        const newValue = lastValue + (Math.random() - 0.5) * 500; 
+        const newEntry = { 
+            name: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute:'2-digit' }), 
+            btc: newValue 
+        };
+        return [...currentData.slice(1), newEntry]; 
+      });
+    }, 3000); 
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <>
-      <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-main text-white px-4 py-12">
-        <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">
-          Bem-vindo à Lunaria
-        </h1>
-        <p className="text-subtitle text-lg mb-10 text-center max-w-xl">
-          Uma nova oportunidade de investimentos para a sua vida.
-        </p>
+    <div className="min-h-screen bg-background text-textPrimary pt-20">
+      <NavBar />
 
-        {!isLogged && (
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
-            <Link href="/users/login">
-              <button className="bg-panel text-white py-2 px-6 rounded-md hover:bg-purple-800 transition duration-200">
-                Login
-              </button>
-            </Link>
-            <Link href="/users/create">
-              <button className="bg-transparent border border-panel text-panel py-2 px-6 rounded-md hover:bg-panel hover:text-white transition duration-200">
-                Cadastro
-              </button>
-            </Link>
-          </div>
-        )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-white mb-2">Visão Geral do Mercado</h1>
+          <p className="text-textSecondary">Acompanhe seus ativos em tempo real.</p>
+        </motion.div>
 
-        <div className="w-full max-w-4xl mx-auto">
-          <h2 className="text-2xl font-semibold text-title mb-4 text-center">
-            Mercado de Cripto (Lunaria)
-          </h2>
-          <div className="overflow-x-auto rounded-lg border border-highlight">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-panel text-title">
-                <tr>
-                  <th className="px-4 py-3">Par</th>
-                  <th className="px-4 py-3">Preço</th>
-                  <th className="px-4 py-3">24h %</th>
-                  <th className="px-4 py-3">Volume</th>
-                </tr>
-              </thead>
-              <tbody className="bg-main text-subtitle">
-                <tr className="border-t border-highlight hover:bg-[#1a1a1a] transition">
-                  <td className="px-4 py-2">BTC/USDT</td>
-                  <td className="px-4 py-2 text-title">$63,200.12</td>
-                  <td className="px-4 py-2 text-green-400">+2.15%</td>
-                  <td className="px-4 py-2">$1.5B</td>
-                </tr>
-                <tr className="border-t border-highlight hover:bg-[#1a1a1a] transition">
-                  <td className="px-4 py-2">ETH/USDT</td>
-                  <td className="px-4 py-2 text-title">$3,420.89</td>
-                  <td className="px-4 py-2 text-red-400">-1.02%</td>
-                  <td className="px-4 py-2">$800M</td>
-                </tr>
-                <tr className="border-t border-highlight hover:bg-[#1a1a1a] transition">
-                  <td className="px-4 py-2">XRP/USDT</td>
-                  <td className="px-4 py-2 text-title">$0.5210</td>
-                  <td className="px-4 py-2 text-green-400">+0.67%</td>
-                  <td className="px-4 py-2">$180M</td>
-                </tr>
-                <tr className="border-t border-highlight hover:bg-[#1a1a1a] transition">
-                  <td className="px-4 py-2">ADA/USDT</td>
-                  <td className="px-4 py-2 text-title">$0.4012</td>
-                  <td className="px-4 py-2 text-red-400">-0.34%</td>
-                  <td className="px-4 py-2">$95M</td>
-                </tr>
-                <tr className="border-t border-highlight hover:bg-[#1a1a1a] transition">
-                  <td className="px-4 py-2">DOGE/USDT</td>
-                  <td className="px-4 py-2 text-title">$0.0831</td>
-                  <td className="px-4 py-2 text-green-400">+4.88%</td>
-                  <td className="px-4 py-2">$300M</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {[
+            { label: "Saldo Total", value: "R$ 142.350,00", change: "+2.5%", color: "text-success" },
+            { label: "Lucro 24h", value: "R$ 3.240,00", change: "+1.2%", color: "text-success" },
+            { label: "Ativos em Baixa", value: "Ethereum", change: "-0.8%", color: "text-danger" }
+          ].map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-surface p-6 rounded-2xl border border-white/5 hover:border-primary/50 transition-colors"
+            >
+              <h3 className="text-textSecondary text-sm">{stat.label}</h3>
+              <div className="flex items-end gap-2 mt-2">
+                <span className="text-2xl font-bold text-white">{stat.value}</span>
+                <span className={`text-sm ${stat.color} mb-1`}>{stat.change}</span>
+              </div>
+            </motion.div>
+          ))}
         </div>
-        <CryptoPieChart />
-      </div>
-    </>
+
+        <motion.div 
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ delay: 0.4 }}
+           className="bg-surface p-6 rounded-2xl border border-white/5 h-[400px]"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-white">Bitcoin (BTC/BRL)</h2>
+            <div className="flex gap-2">
+                <button className="px-3 py-1 bg-surfaceHover rounded text-xs text-white">1H</button>
+                <button className="px-3 py-1 bg-primary text-white rounded text-xs">24H</button>
+                <button className="px-3 py-1 bg-surfaceHover rounded text-xs text-white">1W</button>
+            </div>
+          </div>
+          
+          <ResponsiveContainer width="100%" height="85%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="colorBtc" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2B3139" vertical={false} />
+              <XAxis dataKey="name" stroke="#848E9C" tick={{fontSize: 12}} />
+              <YAxis stroke="#848E9C" domain={['auto', 'auto']} tick={{fontSize: 12}} 
+                     tickFormatter={(value) => `R$${value/1000}k`} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#181A20', borderColor: '#2B3139', color: '#fff' }}
+                itemStyle={{ color: '#8B5CF6' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="btc" 
+                stroke="#8B5CF6" 
+                strokeWidth={2}
+                fillOpacity={1} 
+                fill="url(#colorBtc)" 
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </main>
+    </div>
   );
 }

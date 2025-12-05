@@ -1,5 +1,5 @@
 import axios from "axios";
-import { userAPI } from "./API";
+import { userAPI } from "./API"; 
 
 export interface User {
     id?: number;
@@ -10,6 +10,22 @@ export interface User {
     password?: string;
     photo: string;
 }
+
+export interface LoginCredentials {
+    email: string;
+    password?: string;
+}
+
+export const login = async (credentials: LoginCredentials) => {
+    const response = await axios.post(`http://localhost:5266/auth/login`, credentials);
+    
+    if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userEmail", credentials.email);
+    }
+    
+    return response.data;
+};
 
 const userService = {
     async getAll(): Promise<User[]> {
