@@ -1,6 +1,5 @@
 
 
-// ⚠️ MUDE AQUI PARA O SEU IP SE ESTIVER USANDO CELULAR FÍSICO
 // Exemplo: const BASE_GATEWAY_URL = "http://192.168.1.15:5266";
 // Se for Emulador Android, use: "http://10.0.2.2:5266";
 //const BASE_GATEWAY_URL = "http://10.0.2.2:5266"; 

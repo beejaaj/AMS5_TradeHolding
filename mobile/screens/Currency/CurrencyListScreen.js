@@ -7,13 +7,14 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
-  RefreshControl
+  RefreshControl,
+  Platform
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
-// 1. IMPORTE O SERVIÇO
 import currencyService from "../../services/currencyService";
+import { Header } from "../../components/Header";
 
 export default function CurrencyListScreen({ onSelect }) {
   const navigation = useNavigation();
@@ -35,7 +36,6 @@ export default function CurrencyListScreen({ onSelect }) {
     if (!refreshing) setLoading(true);
     setError("");
     try {
-      // 2. CHAMADA REAL
       const data = await currencyService.getAllCurrency();
       setCurrencies(data);
     } catch (err) {
@@ -48,6 +48,16 @@ export default function CurrencyListScreen({ onSelect }) {
   }
 
   const handleDelete = (id) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm("Tem certeza que deseja excluir esta moeda?");
+      
+      if (confirmed) {
+        confirmDelete(id);
+      } else {
+        setMenuOpenId(null);
+      }
+      return;
+    }
     Alert.alert("Confirmar exclusão", "Deseja excluir esta moeda?", [
       { text: "Cancelar", style: "cancel", onPress: () => setMenuOpenId(null) },
       { text: "Excluir", style: "destructive", onPress: async () => await confirmDelete(id) }
@@ -57,7 +67,6 @@ export default function CurrencyListScreen({ onSelect }) {
   const confirmDelete = async (id) => {
     setDeleting(true);
     try {
-      // 3. CHAMADA REAL
       await currencyService.deleteCurrency(id);
       
       setCurrencies(prev => prev.filter(c => c.id !== id));
@@ -75,7 +84,6 @@ export default function CurrencyListScreen({ onSelect }) {
     fetchCurrencies();
   }
 
-  // ... (Funções handleSelect, toggleMenu, handleEdit mantêm-se iguais) ...
   const handleSelect = (item) => { setSelectedId(item.id); setMenuOpenId(null); if (onSelect) onSelect(item); };
   const toggleMenu = (id) => { setMenuOpenId(prev => prev === id ? null : id); };
   const handleEdit = (id) => { setMenuOpenId(null); navigation.navigate("CurrencyEdit", { id }); };
@@ -115,7 +123,9 @@ export default function CurrencyListScreen({ onSelect }) {
 
   return (
     <View style={styles.container}>
+      <Header />
       <View style={styles.header}>
+        
         <Text style={styles.headerTitle}>Moedas</Text>
         <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("CurrencyCreate")}>
             <Feather name="plus" size={20} color="#fff" />
