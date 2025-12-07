@@ -15,25 +15,23 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
-// import { currencyAPI } from "@/services/API";
+// 1. IMPORTE O SERVIÇO
+import currencyService from "../../services/currencyService";
 
 export default function CreateCurrencyScreen() {
   const navigation = useNavigation();
 
-  // Estados do Formulário
   const [symbol, setSymbol] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [backing, setBacking] = useState('');
-  const [status, setStatus] = useState(''); // 'ativo' ou 'fechado'
+  const [status, setStatus] = useState(''); 
 
-  // Estados de UI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleSubmit = async () => {
-    // Validação
     if (!symbol || !name || !description || !backing || !status) {
       setError('Por favor, preencha todos os campos.');
       return;
@@ -41,6 +39,7 @@ export default function CreateCurrencyScreen() {
 
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const currencyPayload = {
@@ -51,34 +50,20 @@ export default function CreateCurrencyScreen() {
         status
       };
 
-      // --- CHAMADA DE API REAL (Descomente e ajuste) ---
-      /*
-      const res = await fetch(currencyAPI.registerCurrency(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currencyPayload),
-      });
+      // 2. CHAMADA REAL DA API VIA SERVICE
+      await currencyService.registerCurrency(currencyPayload);
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || 'Falha no cadastro');
-      }
-      */
-
-      // --- SIMULAÇÃO ---
-      await new Promise(r => setTimeout(r, 1500));
-      console.log("Moeda Criada:", currencyPayload);
-
-      setSuccess('Cadastro realizado com sucesso!');
+      setSuccess('Moeda cadastrada com sucesso!');
       
       // Retornar para a lista após sucesso
       setTimeout(() => {
-        // navigation.navigate('CurrencyList'); // Ou goBack se veio da lista
         navigation.goBack();
       }, 1500);
 
     } catch (err) {
-      setError(err.message || 'Erro ao cadastrar moeda.');
+      console.error(err);
+      const msg = err.response?.data?.message || err.message || 'Erro ao cadastrar moeda.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -88,7 +73,6 @@ export default function CreateCurrencyScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Botão Voltar */}
       <TouchableOpacity 
         style={styles.backButton} 
         onPress={() => navigation.goBack()}
@@ -104,7 +88,6 @@ export default function CreateCurrencyScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
           <View style={styles.headerContainer}>
             <View style={styles.logoPlaceholder}>
                <Text style={{fontSize: 30}}>🌑</Text>
@@ -112,14 +95,11 @@ export default function CreateCurrencyScreen() {
             <Text style={styles.title}>Nova Moeda</Text>
           </View>
 
-          {/* Mensagens de Feedback */}
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           {success ? <Text style={styles.successText}>{success}</Text> : null}
 
-          {/* Formulário */}
           <View style={styles.formContainer}>
             
-            {/* Símbolo */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Símbolo</Text>
               <TextInput
@@ -128,11 +108,10 @@ export default function CreateCurrencyScreen() {
                 placeholderTextColor="#666"
                 value={symbol}
                 onChangeText={setSymbol}
-                autoCapitalize="characters" // Símbolos geralmente são maiúsculos
+                autoCapitalize="characters"
               />
             </View>
 
-            {/* Nome */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nome</Text>
               <TextInput
@@ -144,7 +123,6 @@ export default function CreateCurrencyScreen() {
               />
             </View>
 
-            {/* Descrição */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Descrição</Text>
               <TextInput
@@ -158,7 +136,6 @@ export default function CreateCurrencyScreen() {
               />
             </View>
 
-            {/* Lastro */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Lastro</Text>
               <TextInput
@@ -170,7 +147,6 @@ export default function CreateCurrencyScreen() {
               />
             </View>
 
-            {/* Status (Selector Customizado) */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Status</Text>
               <View style={styles.statusContainer}>
@@ -198,7 +174,6 @@ export default function CreateCurrencyScreen() {
               </View>
             </View>
 
-            {/* Botão Submit */}
             <TouchableOpacity 
               style={styles.submitButton} 
               onPress={handleSubmit}
@@ -237,8 +212,6 @@ const styles = StyleSheet.create({
     paddingTop: 80,
     paddingBottom: 40,
   },
-  
-  // Header
   headerContainer: {
     alignItems: "center",
     marginBottom: 24,
@@ -259,8 +232,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-
-  // Feedback
   errorText: {
     color: "#f87171",
     backgroundColor: "rgba(248, 113, 113, 0.1)",
@@ -277,8 +248,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 15,
   },
-
-  // Form
   formContainer: {
     width: "100%",
   },
@@ -301,11 +270,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   textArea: {
-    height: 100, // Altura maior para descrição
-    textAlignVertical: 'top', // O texto começa no topo
+    height: 100,
+    textAlignVertical: 'top',
   },
-
-  // Status Selector Style
   statusContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -330,8 +297,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontWeight: "600",
   },
-
-  // Botão
   submitButton: {
     backgroundColor: "#5c1a75",
     paddingVertical: 16,
