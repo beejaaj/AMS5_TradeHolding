@@ -1,5 +1,5 @@
 import axios from "axios";
-import { userAPI } from "./API"; 
+import { userAPI, authAPI } from "./API"; 
 
 export interface User {
     id?: number;
@@ -17,7 +17,7 @@ export interface LoginCredentials {
 }
 
 export const login = async (credentials: LoginCredentials) => {
-    const response = await axios.post(`http://localhost:5266/auth/login`, credentials);
+    const response = await axios.post(authAPI.login(), credentials);
     
     if (response.data.token) {
         localStorage.setItem("token", response.data.token);
@@ -34,8 +34,7 @@ const userService = {
         const response = await axios.get(userAPI.getAll(), {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json',
-                'Access-Control-Allow-Origin': '*'
+                'Accept': 'application/json'
             }
         });
         return response.data;

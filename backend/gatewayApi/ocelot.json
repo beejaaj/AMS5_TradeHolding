@@ -126,7 +126,7 @@
             ],
             "UpstreamPathTemplate": "/auth/login",
             "UpstreamHttpMethod": [
-                "POST"
+                "POST", "OPTIONS"
             ]
         },
         {
