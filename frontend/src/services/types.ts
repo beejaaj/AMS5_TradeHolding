@@ -7,8 +7,9 @@ export interface Currency {
   status: string;
 }
 
-export interface HistoryItem {
+export interface History {
   id: number;
+  currencyId: string;
   date: string;
   value: number; 
 }

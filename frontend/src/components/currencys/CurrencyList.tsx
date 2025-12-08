@@ -16,7 +16,7 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import "./CurrencyList.css";
+
 
 export const CurrencyList = ({
     onSelect,

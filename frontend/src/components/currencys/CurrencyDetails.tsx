@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Currency } from "../../services/types";
 import { currencyAPI } from "@/services/API";
-import "./CurrencyDetails.css";
 
 export const CurrencyDetails = ({
   currency,
