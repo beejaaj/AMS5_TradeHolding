@@ -12,10 +12,12 @@ import {
   LogIn, 
   LogOut, 
   User as UserIcon,
-  ChevronDown
+  ChevronDown,
+  Users
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import userService from "@/services/userService"; // Usando o serviço padronizado
 
 export default function NavBar() {
   const pathname = usePathname();
@@ -23,13 +25,33 @@ export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
+
+    if (token) {
+        checkAdminStatus();
+    }
   }, [pathname]);
+
+  const checkAdminStatus = async () => {
+      try {
+          // Busca o perfil usando o serviço centralizado
+          const user = await userService.getProfile();
+          
+          // ✅ CORREÇÃO: Verifica se o ID é "1" OU "33"
+          const userId = String(user.id);
+          if (userId === "1" || userId === "33") {
+              setIsAdmin(true);
+          }
+      } catch (error) {
+          console.error("Erro ao verificar admin", error);
+      }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -45,16 +67,16 @@ export default function NavBar() {
     localStorage.removeItem("token");
     localStorage.removeItem("userEmail");
     setIsLoggedIn(false);
+    setIsAdmin(false);
     setIsUserMenuOpen(false);
     router.push("/users/login");
   };
 
-  const navItems = isLoggedIn ? [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Mercado", href: "/currency", icon: ArrowRightLeft },
-    { name: "Carteira", href: "/users", icon: Wallet },
-  ] : [
-    { name: "Mercado", href: "/currency", icon: ArrowRightLeft },
+  const navItems = [
+    { name: "Dashboard", href: "/", icon: LayoutDashboard, visible: isLoggedIn },
+    { name: "Mercado", href: "/currency", icon: ArrowRightLeft, visible: true },
+    // A opção "Usuários" agora aparecerá para ID 1 e ID 33
+    { name: "Usuários", href: "/users", icon: Users, visible: isLoggedIn && isAdmin }, 
   ];
 
   return (
@@ -62,11 +84,9 @@ export default function NavBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* LOGO E NOME */}
           <div className="flex-shrink-0 flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              {/* Ajuste do Logo: p-0.5 para padding e object-contain */}
-              <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/10 bg-white/5 p-0.5">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-white/5 p-1">
                 <Image 
                   src="/Lunaria.jpg" 
                   alt="Lunaria Logo" 
@@ -74,17 +94,16 @@ export default function NavBar() {
                   className="object-contain rounded-full"
                 />
               </div>
-              {/* Nome Alterado */}
               <span className="text-xl font-bold text-white tracking-tight hidden sm:block">
                 Lunaria
               </span>
             </Link>
           </div>
 
-          {/* DESKTOP MENU */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-1">
               {navItems.map((item) => {
+                if (!item.visible) return null;
                 const isActive = pathname === item.href;
                 return (
                   <Link
@@ -104,7 +123,6 @@ export default function NavBar() {
             </div>
           </div>
 
-          {/* AREA DO USUÁRIO */}
           <div className="hidden md:block">
              {isLoggedIn ? (
                <div className="relative" ref={dropdownRef}>
@@ -151,7 +169,6 @@ export default function NavBar() {
              )}
           </div>
 
-          {/* MENU MOBILE */}
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -172,19 +189,22 @@ export default function NavBar() {
             className="md:hidden bg-[#0B0E11] border-b border-white/5 overflow-hidden"
           >
             <div className="px-4 pt-2 pb-6 space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-base font-medium text-[#848E9C] hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon size={20} className="text-[#8B5CF6]" />
-                    {item.name}
-                  </div>
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                if (!item.visible) return null;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-3 rounded-lg text-base font-medium text-[#848E9C] hover:text-white hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon size={20} className="text-[#8B5CF6]" />
+                      {item.name}
+                    </div>
+                  </Link>
+                );
+              })}
               
               <div className="pt-4 border-t border-white/5 mt-4">
                  {isLoggedIn ? (

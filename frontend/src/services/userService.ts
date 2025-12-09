@@ -1,8 +1,8 @@
 import axios from "axios";
-import { userAPI, authAPI } from "./API"; 
+import { userAPI, authAPI } from "./API";
 
 export interface User {
-    id?: number;
+    id?: string | number;
     name: string;
     email: string;
     phone: string;
@@ -15,6 +15,15 @@ export interface LoginCredentials {
     email: string;
     password?: string;
 }
+
+const getHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+};
 
 export const login = async (credentials: LoginCredentials) => {
     const response = await axios.post(authAPI.login(), credentials);
@@ -29,15 +38,32 @@ export const login = async (credentials: LoginCredentials) => {
 
 const userService = {
     async getAll(): Promise<User[]> {
-        const token = localStorage.getItem("token");
-        console.log("Token gerado:", token);
-        const response = await axios.get(userAPI.getAll(), {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
-            }
-        });
+        const response = await axios.get(userAPI.getAll(), { headers: getHeaders() });
         return response.data;
+    },
+
+    async getById(id: string | number): Promise<User> {
+        const response = await axios.get(userAPI.getById(id), { headers: getHeaders() });
+        return response.data;
+    },
+
+    async getProfile(): Promise<User> {
+        const response = await axios.get(authAPI.profile(), { headers: getHeaders() });
+        return response.data;
+    },
+
+    async register(data: Partial<User>) {
+        const response = await axios.post(userAPI.create(), data);
+        return response.data;
+    },
+
+    async update(id: string | number, data: Partial<User>) {
+        const response = await axios.put(userAPI.edit(id), data, { headers: getHeaders() });
+        return response.data;
+    },
+
+    async delete(id: string | number) {
+        await axios.delete(userAPI.delete(id), { headers: getHeaders() });
     }
 };
 

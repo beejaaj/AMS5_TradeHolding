@@ -6,7 +6,7 @@ import { History } from "@/services/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
-    ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownLeft, Calendar, Loader2 
+    ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Calendar, Loader2, Minus 
 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 5;
@@ -26,80 +26,101 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
             const res = await fetch(historyAPI.GetByCurrency(currencyId));
             if (res.ok) {
                 const data: History[] = await res.json();
-                // Ordena do mais recente para o mais antigo
+                // Ordena do mais recente para o antigo para exibição
                 setHistory(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
                 setCurrentPage(1);
             }
         } catch (error) {
-            console.error("Erro ao buscar histórico:", error);
+            console.error("Erro histórico:", error);
         } finally {
             setLoading(false);
         }
     }
 
-    // Lógica de Paginação (Client-Side)
+    // Função para determinar variação
+    const getVariation = (currentIndex: number, allItems: History[]) => {
+        // Como a lista está ordenada do mais recente para o mais antigo:
+        // O "anterior" no tempo é o índice atual + 1
+        const previousItem = allItems[currentIndex + 1];
+
+        if (!previousItem) return { type: 'neutral', diff: 0 };
+
+        const currentVal = allItems[currentIndex].value;
+        const prevVal = previousItem.value;
+        
+        if (currentVal > prevVal) return { type: 'up', diff: currentVal - prevVal };
+        if (currentVal < prevVal) return { type: 'down', diff: prevVal - currentVal };
+        return { type: 'neutral', diff: 0 };
+    };
+
+    // Paginação
     const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    // Precisamos de um slice maior ou acesso ao array completo para comparar o último item da página com o próximo fora da página
     const currentItems = history.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return (
-        <div className="bg-[#1E2329] rounded-2xl border border-[#2B3139] shadow-xl overflow-hidden mt-6">
+        <div className="bg-[#1E2329] rounded-2xl border border-[#2B3139] shadow-xl overflow-hidden mt-6 flex flex-col">
             <div className="p-5 border-b border-[#2B3139] flex justify-between items-center bg-[#1E2329]">
-                <h3 className="text-lg font-bold text-[#EAECEF]">Histórico de Transações</h3>
+                <h3 className="text-lg font-bold text-[#EAECEF]">Histórico de Preços</h3>
                 <span className="text-xs font-semibold text-[#848E9C] bg-[#2B3139] px-2.5 py-1 rounded-md">
-                    {history.length} Operações
+                    {history.length} Registros
                 </span>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full text-sm text-left">
                     <thead className="text-xs text-[#848E9C] uppercase bg-[#0B0E11] border-b border-[#2B3139]">
                         <tr>
-                            <th className="px-6 py-4 font-semibold">Tipo</th>
                             <th className="px-6 py-4 font-semibold">Data</th>
-                            <th className="px-6 py-4 font-semibold text-right">Valor</th>
-                            <th className="px-6 py-4 font-semibold text-right">Status</th>
+                            <th className="px-6 py-4 font-semibold text-right">Preço (R$)</th>
+                            <th className="px-6 py-4 font-semibold text-right">Variação</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[#2B3139]">
                         {loading ? (
                             <tr>
-                                <td colSpan={4} className="p-8 text-center">
+                                <td colSpan={3} className="p-8 text-center">
                                     <div className="flex justify-center items-center gap-2 text-[#848E9C]">
                                         <Loader2 className="animate-spin" size={18} /> Carregando...
                                     </div>
                                 </td>
                             </tr>
                         ) : currentItems.length === 0 ? (
-                            <tr><td colSpan={4} className="p-8 text-center text-[#848E9C]">Nenhum registro encontrado.</td></tr>
+                            <tr><td colSpan={3} className="p-8 text-center text-[#848E9C]">Nenhum histórico de preço.</td></tr>
                         ) : (
-                            currentItems.map((h) => (
-                                <tr key={h.id} className="hover:bg-[#2B3139]/50 transition-colors bg-[#1E2329]">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            {/* Ícone baseado em lógica simples (se valor positivo/negativo ou tipo) */}
-                                            <div className="w-8 h-8 rounded-full bg-[#2B3139] flex items-center justify-center text-[#EAECEF]">
-                                                <ArrowUpRight size={16} className="text-[#0ECB81]" />
+                            currentItems.map((h, i) => {
+                                // O índice real no array completo é startIndex + i
+                                const realIndex = startIndex + i;
+                                const variation = getVariation(realIndex, history);
+                                
+                                return (
+                                    <tr key={h.id || i} className="hover:bg-[#2B3139]/50 transition-colors bg-[#1E2329]">
+                                        <td className="px-6 py-4 text-[#848E9C]">
+                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                <Calendar size={14}/>
+                                                {format(new Date(h.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                                             </div>
-                                            <span className="font-medium text-[#EAECEF]">Movimentação</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-[#848E9C]">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar size={14}/>
-                                            {format(new Date(h.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right font-mono font-medium text-[#EAECEF]">
-                                        R$ {h.value.toFixed(2)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className="text-[#0ECB81] text-xs bg-[#0ECB81]/10 px-2 py-1 rounded font-bold">
-                                            Confirmado
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-mono font-medium text-[#EAECEF]">
+                                            R$ {h.value.toFixed(2)}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className={`flex items-center justify-end gap-1 font-bold text-xs
+                                                ${variation.type === 'up' ? 'text-[#0ECB81]' : 
+                                                  variation.type === 'down' ? 'text-[#F6465D]' : 'text-[#848E9C]'}`}>
+                                                
+                                                {variation.type === 'up' && <TrendingUp size={16} />}
+                                                {variation.type === 'down' && <TrendingDown size={16} />}
+                                                {variation.type === 'neutral' && <Minus size={16} />}
+                                                
+                                                {variation.type !== 'neutral' && `R$ ${variation.diff.toFixed(2)}`}
+                                                {variation.type === 'neutral' && "-"}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
@@ -114,14 +135,14 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
                     <div className="flex gap-2">
                         <button 
                             disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            onClick={() => setCurrentPage(p => p - 1)}
                             className="p-2 rounded-lg bg-[#2B3139] text-[#EAECEF] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#474D57] transition-all"
                         >
                             <ChevronLeft size={18} />
                         </button>
                         <button 
                             disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            onClick={() => setCurrentPage(p => p + 1)}
                             className="p-2 rounded-lg bg-[#2B3139] text-[#EAECEF] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#474D57] transition-all"
                         >
                             <ChevronRight size={18} />

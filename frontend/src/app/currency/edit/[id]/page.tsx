@@ -1,15 +1,11 @@
-import { Header } from "@/components/common/Header";
 import { EditCurrency } from "@/components/currencys/EditCurrency";
+import NavBar from "@/components/NavBar";
 
-type EditCurrencyPageProps = {
-    params: { id: string };
-};
-
-export default function Page({ params }: EditCurrencyPageProps) {
+export default function EditCurrencyPage({ params }: { params: { id: string } }) {
     return (
-        <div>
-            <Header />
-            <EditCurrency params={params} />
+        <div className="min-h-screen bg-[#0B0E11] pt-20">
+            <NavBar />
+            <EditCurrency id={params.id} />
         </div>
     );
 }
