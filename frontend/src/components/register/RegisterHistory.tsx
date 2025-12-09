@@ -1,153 +1,145 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { historyAPI } from "@/services/API";
-import "./RegisterHistory.css";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { currencyAPI, historyAPI } from "@/services/API";
+import { Currency } from "@/services/types";
+import { motion } from "framer-motion";
+import { 
+  TrendingUp, Calendar, DollarSign, Save, ArrowLeft, Loader2 
+} from "lucide-react";
+import Link from "next/link";
 
-export default function RegisterHistory() {
+export const RegisterHistory = () => {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const currencyIdParam = searchParams.get("currencyId") || "";
-    const [currencyId, setCurrencyId] = useState<string>(currencyIdParam);
-
-    const [usePcDate, setUsePcDate] = useState(false);
-    const [dateValue, setDateValue] = useState("");
-    const [value, setValue] = useState("");
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [currencies, setCurrencies] = useState<Currency[]>([]);
     const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        currencyId: "",
+        value: "",
+        date: new Date().toISOString().slice(0, 16) // Data atual formatada para input datetime-local
+    });
 
     useEffect(() => {
-        if (usePcDate) {
-            const now = new Date();
-            const iso = now.toISOString().slice(0, 16);
-            setDateValue(iso);
-        }
-    }, [usePcDate]);
+        fetchCurrencies();
+    }, []);
+
+    async function fetchCurrencies() {
+        try {
+            const res = await fetch(currencyAPI.getAllCurrency());
+            if (res.ok) setCurrencies(await res.json());
+        } catch (error) { console.error(error); }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
-
-        if (!currencyId) {
-            setError("ID da moeda não fornecido.");
-            setLoading(false);
-            return;
-        }
-        if (!dateValue) {
-            setError("Preencha a data ou selecione usar data do PC.");
-            setLoading(false);
-            return;
-        }
-        if (!value) {
-            setError("Preencha o valor do histórico.");
-            setLoading(false);
-            return;
-        }
-
-        const payload = {
-            currencyId: currencyId,
-            value: parseFloat(value),
-            date: new Date(dateValue).toISOString(),
-        };
-
         try {
+            const payload = {
+                currencyId: formData.currencyId,
+                value: parseFloat(formData.value),
+                date: new Date(formData.date).toISOString()
+            };
+
             const res = await fetch(historyAPI.RegisterHistory(), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) {
-                let errMsg = "Falha ao cadastrar histórico.";
-                const text = await res.text();
-                try {
-                    const json = JSON.parse(text);
-                    errMsg = json.message || text;
-                } catch {
-                    errMsg = text;
-                }
-                throw new Error(errMsg);
+            if (res.ok) {
+                router.push("/currency");
+            } else {
+                alert("Erro ao registrar histórico.");
             }
-
-            setSuccess("Histórico cadastrado com sucesso!");
-            setTimeout(() => {
-                router.push(`/currency`);
-            }, 1000);
-        } catch (err: any) {
-            setError(err.message || "Erro inesperado ao cadastrar histórico.");
+        } catch (error) {
+            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="register-history-container">
-            <div className="register-history-card">
-                <h1 className="register-history-title">Novo Histórico</h1>
-                {error && <div className="error-message">{error}</div>}
-                {success && <div className="success-message">{success}</div>}
-
-                <form onSubmit={handleSubmit} className="register-history-form">
-                    <div className="form-group">
-                        <label>ID da Moeda</label>
-                        <input
-                            type="text"
-                            value={currencyId}
-                            disabled
-                            className="form-input read-only-input disabled-input"
-                        />
+        <div className="flex justify-center items-center min-h-[calc(100vh-100px)] p-4">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#1E2329] border border-[#2B3139] rounded-2xl shadow-2xl w-full max-w-lg"
+            >
+                <div className="p-6 border-b border-[#2B3139] flex justify-between items-center bg-[#1E2329]">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-[#8B5CF6]/10 rounded-xl">
+                            <TrendingUp className="text-[#8B5CF6]" size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-[#EAECEF]">Novo Registro</h2>
+                            <p className="text-sm text-[#848E9C]">Adicionar preço histórico manualmente.</p>
+                        </div>
                     </div>
+                    <Link href="/currency">
+                        <button className="text-[#848E9C] hover:text-[#EAECEF] hover:bg-[#2B3139] p-2 rounded-lg transition-colors">
+                            <ArrowLeft size={20} />
+                        </button>
+                    </Link>
+                </div>
 
-
-                    <div className="form-group">
-                        <label htmlFor="date">Data e hora</label>
-                        <input
-                            id="date"
-                            type="datetime-local"
-                            value={dateValue}
-                            onChange={(e) => setDateValue(e.target.value)}
-                            disabled={usePcDate}
-                            className="form-input disabled-input"
-                            required={!usePcDate}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="value">Valor</label>
-                        <input
-                            id="value"
-                            type="number"
-                            step="0.01"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            className="form-input"
-                            placeholder="Ex: 123.45"
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-[#848E9C] uppercase">Selecione o Ativo</label>
+                        <select
                             required
-                        />
+                            value={formData.currencyId}
+                            onChange={(e) => setFormData({...formData, currencyId: e.target.value})}
+                            className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#8B5CF6]"
+                        >
+                            <option value="">Selecione...</option>
+                            {currencies.map(c => (
+                                <option key={c.id} value={c.id}>{c.symbol} - {c.name}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div className="form-group checkbox-group">
-                        <input
-                            type="checkbox"
-                            id="usePcDate"
-                            checked={usePcDate}
-                            onChange={(e) => setUsePcDate(e.target.checked)}
-                        />
-                        <label htmlFor="usePcDate">Usar data/hora do PC</label>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-[#848E9C] uppercase">Preço (Valor)</label>
+                        <div className="relative">
+                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-[#848E9C]" size={18} />
+                            <input
+                                required
+                                type="number"
+                                step="0.00000001"
+                                value={formData.value}
+                                onChange={(e) => setFormData({...formData, value: e.target.value})}
+                                placeholder="0.00"
+                                className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-[#8B5CF6]"
+                            />
+                        </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="submit-history-btn "
-                    >
-                        {loading ? "Cadastrando..." : "Cadastrar Histórico"}
-                    </button>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-[#848E9C] uppercase">Data e Hora</label>
+                        <div className="relative">
+                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#848E9C]" size={18} />
+                            <input
+                                required
+                                type="datetime-local"
+                                value={formData.date}
+                                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                                className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-[#8B5CF6] [color-scheme:dark]"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#8B5CF6]/20 flex justify-center items-center gap-2"
+                        >
+                            {loading ? <Loader2 className="animate-spin" /> : <><Save size={20} /> Registrar Preço</>}
+                        </button>
+                    </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
-}
+};
