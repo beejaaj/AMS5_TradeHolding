@@ -1,5 +1,5 @@
 export interface Currency {
-  id?: number;
+  id?: string;
   symbol: string;
   name: string;
   description?: string;
@@ -7,8 +7,9 @@ export interface Currency {
   status: string;
 }
 
-export interface HistoryItem {
-  id: number;
+export interface History {
+  id: string;
+  currencyId: string;
   date: string;
   value: number; 
 }

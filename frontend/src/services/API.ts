@@ -1,5 +1,5 @@
-const BASE_GATEWAY_URL = "http://localhost:5266";
-
+//const BASE_GATEWAY_URL = "http://localhost:5266";
+ const BASE_GATEWAY_URL = "https://jubilant-potato-r4774rrjvq57hwx4-5266.app.github.dev";
 const crudAPI = (basePath: string) => ({
   create: () => `${basePath}`,
   getAll: () => `${basePath}`,
