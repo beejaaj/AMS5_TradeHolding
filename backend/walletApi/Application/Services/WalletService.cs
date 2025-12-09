@@ -121,7 +121,7 @@ namespace walletApi.Application.Services
             try
             {
                 // URL da sua CurrencyAPI
-                var url = "http://localhost:5284/api/Currency";
+                var url = "http://localhost:5266/api/Currency";
                 var response = await _http.GetAsync(url);
                 if (!response.IsSuccessStatusCode) return 0;
 
