@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import userService, { User } from "@/services/userService";
 import { motion } from "framer-motion";
-import { User as UserIcon, Mail, Phone, MapPin, Save, Loader2, ArrowLeft, Camera } from "lucide-react";
+import { User as UserIcon, Mail, Phone, MapPin, Save, Loader2, ArrowLeft, Camera, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -13,14 +13,14 @@ export const EditProfile = ({ id }: { id: string }) => {
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     
-    // CORREÇÃO: Usamos a interface User para o estado, garantindo compatibilidade de tipos
     const [formData, setFormData] = useState<User>({
-        id: "", // Inicializa vazio, mas o tipo aceita number/string/undefined do User
+        id: "", 
         name: "",
         email: "",
         phone: "",
         address: "",
-        photo: ""
+        photo: "",
+        password: "" // Campo de senha adicionado
     });
 
     useEffect(() => {
@@ -28,9 +28,10 @@ export const EditProfile = ({ id }: { id: string }) => {
             try {
                 const data = id === "me" 
                     ? await userService.getProfile() 
-                    : await userService.getById(id); // Removido Number() para aceitar string/guid
+                    : await userService.getById(id);
                 
-                setFormData(data);
+                // IMPORTANTE: Limpa a senha para não exibir o hash e permitir edição limpa
+                setFormData({ ...data, password: "" });
                 
                 if (data.photo && data.photo !== "default.png" && data.photo.length > 20) {
                     setPreview(data.photo);
@@ -65,6 +66,7 @@ export const EditProfile = ({ id }: { id: string }) => {
         setLoading(true);
         try {
             if (formData.id) {
+                // O backend deve tratar: se password vier vazio, não altera.
                 await userService.update(formData.id, formData);
                 router.push("/users");
             }
@@ -145,6 +147,21 @@ export const EditProfile = ({ id }: { id: string }) => {
                             <label className="text-xs font-bold text-[#848E9C] uppercase">Endereço</label>
                             <input name="address" value={formData.address} onChange={handleChange} className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] rounded-xl px-4 py-3 focus:border-[#8B5CF6] outline-none" />
                         </div>
+                    </div>
+
+                    {/* CAMPO DE SENHA ADICIONADO */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-[#848E9C] uppercase flex items-center gap-2">
+                            <Lock size={12} /> Nova Senha (Opcional)
+                        </label>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            value={formData.password || ""} 
+                            onChange={handleChange} 
+                            placeholder="Deixe em branco para manter a senha atual"
+                            className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] rounded-xl px-4 py-3 focus:border-[#8B5CF6] outline-none placeholder:text-[#2B3139]" 
+                        />
                     </div>
 
                     <button type="submit" disabled={loading} className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold py-4 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2 mt-4">

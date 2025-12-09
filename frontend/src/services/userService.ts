@@ -16,8 +16,25 @@ export interface LoginCredentials {
     password?: string;
 }
 
+// Em src/services/userService.ts
+
 const getHeaders = () => {
-    const token = localStorage.getItem("token");
+    let token = localStorage.getItem("token");
+    
+    if (!token) {
+        console.warn("⚠️ [FRONTEND] Nenhum token encontrado no localStorage.");
+        return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+    }
+
+    // --- LIMPEZA DE TOKEN (A MÁGICA ACONTECE AQUI) ---
+    // 1. Remove espaços em branco do começo e fim
+    token = token.trim();
+    // 2. Remove aspas duplas ou simples que possam ter vindo do JSON stringify
+    token = token.replace(/['"]+/g, '');
+    
     return {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -30,16 +47,11 @@ const getHeaders = () => {
 export const login = async (credentials: LoginCredentials) => {
     const response = await axios.post(authAPI.login(), credentials);
     
-    // Debug: Veja no console do navegador o que o backend está mandando exatamente
-    console.log("Resposta do Login:", response.data);
 
     // Verificamos se temos o token
     if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         
-        // CORREÇÃO CRÍTICA AQUI:
-        // O backend pode retornar "user" ou "User" dependendo da serialização.
-        // O operador ?. (optional chaining) evita que o app quebre se for nulo.
         const userData = response.data.user || response.data.User;
 
         if (userData && userData.id) {
