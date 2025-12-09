@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import userService from "@/services/userService"; // Usando o serviço padronizado
+import userService from "@/services/userService"; 
 
 export default function NavBar() {
   const pathname = usePathname();
@@ -40,10 +40,7 @@ export default function NavBar() {
 
   const checkAdminStatus = async () => {
       try {
-          // Busca o perfil usando o serviço centralizado
           const user = await userService.getProfile();
-          
-          // ✅ CORREÇÃO: Verifica se o ID é "1" OU "33"
           const userId = String(user.id);
           if (userId === "1" || userId === "33") {
               setIsAdmin(true);
@@ -75,7 +72,8 @@ export default function NavBar() {
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, visible: isLoggedIn },
     { name: "Mercado", href: "/currency", icon: ArrowRightLeft, visible: true },
-    // A opção "Usuários" agora aparecerá para ID 1 e ID 33
+    // ✅ NOVO ITEM ADICIONADO
+    { name: "Minhas Carteiras", href: "/wallets", icon: Wallet, visible: isLoggedIn },
     { name: "Usuários", href: "/users", icon: Users, visible: isLoggedIn && isAdmin }, 
   ];
 

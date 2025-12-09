@@ -1,5 +1,6 @@
 //const BASE_GATEWAY_URL = "http://localhost:5266";
- const BASE_GATEWAY_URL = "https://jubilant-potato-r4774rrjvq57hwx4-5266.app.github.dev";
+const BASE_GATEWAY_URL = "https://jubilant-potato-r4774rrjvq57hwx4-5266.app.github.dev";
+
 const crudAPI = (basePath: string) => ({
   create: () => `${basePath}`,
   getAll: () => `${basePath}`,
@@ -36,4 +37,15 @@ const authAPI = {
   refreshToken: () => `${BASE_GATEWAY_URL}/auth/refreshtoken`, 
 };
 
-export { userAPI, authAPI, currencyAPI, historyAPI };
+const walletAPI = {
+    getWallets: (userId: number | string) => `${BASE_GATEWAY_URL}/api/wallet/${userId}`,
+    create: () => `${BASE_GATEWAY_URL}/api/wallet/create`,
+    deposit: () => `${BASE_GATEWAY_URL}/api/wallet/deposit`,
+    trade: () => `${BASE_GATEWAY_URL}/api/wallet/trade`,
+};
+
+const chatbotAPI = {
+    message: () => `${BASE_GATEWAY_URL}/chatbot/message`,
+};
+
+export { userAPI, authAPI, currencyAPI, historyAPI, walletAPI, chatbotAPI };
