@@ -25,12 +25,31 @@ const getHeaders = () => {
     };
 };
 
+// Em src/services/userService.ts
+
 export const login = async (credentials: LoginCredentials) => {
     const response = await axios.post(authAPI.login(), credentials);
     
+    // Debug: Veja no console do navegador o que o backend está mandando exatamente
+    console.log("Resposta do Login:", response.data);
+
+    // Verificamos se temos o token
     if (response.data.token) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userEmail", credentials.email);
+        
+        // CORREÇÃO CRÍTICA AQUI:
+        // O backend pode retornar "user" ou "User" dependendo da serialização.
+        // O operador ?. (optional chaining) evita que o app quebre se for nulo.
+        const userData = response.data.user || response.data.User;
+
+        if (userData && userData.id) {
+            // Garantimos que seja salvo como string
+            localStorage.setItem("userId", String(userData.id));
+            localStorage.setItem("userName", userData.name); // Opcional: útil para exibir no Header
+            localStorage.setItem("userEmail", userData.email);
+        } else {
+            console.error("ERRO CRÍTICO: Token recebido, mas ID do usuário não encontrado na resposta!", response.data);
+        }
     }
     
     return response.data;

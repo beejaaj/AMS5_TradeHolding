@@ -28,7 +28,16 @@ public class AuthController : ControllerBase
         }
 
         var token = GenerateJwtToken(user);
-        return Ok(new AuthResponseDTO { Token = token });
+        return Ok(new
+        {
+            Token = token,
+            User = new
+            {
+                Id = user.Id, 
+                Name = user.Name,
+                Email = user.Email
+            }
+        });
     }
 
 
@@ -71,5 +80,5 @@ public class AuthController : ControllerBase
         return tokenHandler.WriteToken(token);
     }
 
-    
+
 }

@@ -1,11 +1,13 @@
 import { AllUsers } from "@/components/users/AllUsers";
-import { Header } from '@/components/common/Header';
-import Link from "next/link";
+import NavBar from "@/components/NavBar";
 
 export default function Page() {
   return (
     <div>
-      <Header />
+      <NavBar />
+      <br></br>
+      <br></br>
+      <br />
       <AllUsers />
     </div>
   );
