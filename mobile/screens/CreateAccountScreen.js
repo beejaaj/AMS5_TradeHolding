@@ -20,7 +20,6 @@ import userService from "../services/userService";
 export default function CreateAccountScreen() {
   const navigation = useNavigation();
 
-  // Estados do Formulário
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -29,14 +28,12 @@ export default function CreateAccountScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // Estados de UI
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleRegister = async () => {
-    // Validação básica
     if (!name || !email || !password || !confirmPassword) {
       setError('Preencha os campos obrigatórios.');
       return;
@@ -51,31 +48,27 @@ export default function CreateAccountScreen() {
     setError('');
     
     try {
-      // Cria o objeto conforme a interface User definida no TypeScript
       const userPayload = { 
         name,
         email,
         phone,
         address,
         password,
-        photo: photoUrl // Mapeando photoUrl do input para 'photo' da API
+        photo: photoUrl
       };
 
       console.log("Enviando dados:", userPayload);
 
-      // 2. CHAMADA REAL DA API VIA SERVICE
       await userService.create(userPayload);
 
       setSuccess('Cadastro realizado com sucesso!');
       
-      // Redirecionar após sucesso
       setTimeout(() => {
         navigation.navigate('Login'); 
       }, 1500);
 
     } catch (err) {
       console.error("Erro no cadastro:", err);
-      // Tenta pegar a mensagem de erro específica do backend
       const message = err.response?.data?.message || err.message || 'Erro ao cadastrar usuário.';
       setError(message);
     } finally {
@@ -87,7 +80,7 @@ export default function CreateAccountScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Botão Voltar */}
+      {}
       <TouchableOpacity 
         style={styles.backButton} 
         onPress={() => navigation.goBack()}
@@ -103,7 +96,7 @@ export default function CreateAccountScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
+          
           <View style={styles.headerContainer}>
             <View style={styles.logoPlaceholder}>
                <Text style={{fontSize: 30}}>🌑</Text>
@@ -111,11 +104,11 @@ export default function CreateAccountScreen() {
             <Text style={styles.title}>Cadastro</Text>
           </View>
 
-          {/* Mensagens */}
+          
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           {success ? <Text style={styles.successText}>{success}</Text> : null}
 
-          {/* Formulário */}
+          
           <View style={styles.formContainer}>
             
             <View style={styles.inputGroup}>
@@ -177,7 +170,6 @@ export default function CreateAccountScreen() {
               />
             </View>
 
-            {/* Senha */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Senha</Text>
               <View style={styles.passwordContainer}>
@@ -198,7 +190,6 @@ export default function CreateAccountScreen() {
               </View>
             </View>
 
-            {/* Confirmar Senha */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Confirmar Senha</Text>
               <View style={styles.passwordContainer}>
@@ -213,7 +204,6 @@ export default function CreateAccountScreen() {
               </View>
             </View>
 
-            {/* Botão Submit */}
             <TouchableOpacity 
               style={styles.submitButton} 
               onPress={handleRegister}
@@ -226,7 +216,6 @@ export default function CreateAccountScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Link para Login */}
             <View style={styles.footerLink}>
               <Text style={styles.footerText}>Já tem uma conta? </Text>
               <TouchableOpacity onPress={() => navigation.navigate("Login")}>

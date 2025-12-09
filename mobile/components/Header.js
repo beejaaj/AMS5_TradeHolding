@@ -1,50 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { 
   StyleSheet, 
   Text, 
   View, 
   TouchableOpacity, 
-  Image, 
   SafeAreaView,
   Platform,
   StatusBar
 } from "react-native";
-import { Feather } from "@expo/vector-icons"; // Equivalente ao Lucide
-import { useNavigation } from "@react-navigation/native";
-
-// Se estiver usando autenticação real:
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Feather } from "@expo/vector-icons"; 
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const Header = () => {
   const navigation = useNavigation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLogged, setIsLogged] = useState(false);
 
-  useEffect(() => {
-    // Simulação de verificação de token (substitua por AsyncStorage.getItem('token'))
-    const checkLogin = async () => {
-      // const token = await AsyncStorage.getItem('token');
-      const token = null; // Mude para true/string para testar logado
-      setIsLogged(!!token);
-    };
-    checkLogin();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const checkLogin = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          setIsLogged(!!token);
+        } catch (error) {
+          console.log("Erro ao verificar token:", error);
+        }
+      };
+      checkLogin();
+    }, [])
+  );
 
   const handleLogout = async () => {
-    // await AsyncStorage.removeItem('token');
-    setIsLogged(false);
-    setMenuOpen(false);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }], // Certifique-se que a rota Login existe
-    });
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userEmail'); // Se estiver salvando email
+      setIsLogged(false);
+      setMenuOpen(false);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }], 
+      });
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
-  // Função auxiliar para navegar e fechar o menu
   const navigateTo = (screen) => {
     setMenuOpen(false);
     navigation.navigate(screen);
@@ -52,22 +57,15 @@ export const Header = () => {
 
   return (
     <View style={styles.container}>
-      {/* Ajuste para a barra de status (Safe Area) */}
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.navBar}>
           
-          {/* LOGO */}
           <TouchableOpacity onPress={() => navigateTo("Home")}>
-             {/* Se tiver a imagem no projeto, use require ou uri */}
-             {/* <Image source={require('../assets/Lunaria.jpg')} style={styles.logoImage} /> */}
-             
-             {/* Placeholder visual caso não tenha a imagem ainda */}
              <View style={styles.logoPlaceholder}>
                 <Text style={styles.logoText}>Lunaria</Text>
              </View>
           </TouchableOpacity>
 
-          {/* BOTÃO DO MENU (Hambúrguer / X) */}
           <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
             {menuOpen ? (
               <Feather name="x" size={24} color="#fff" />
@@ -78,7 +76,7 @@ export const Header = () => {
         </View>
       </SafeAreaView>
 
-      {/* MENU DROPDOWN (Expandível) */}
+      {/* MENU DROPDOWN */}
       {menuOpen && (
         <View style={styles.mobileMenu}>
           <TouchableOpacity 
@@ -90,14 +88,14 @@ export const Header = () => {
 
           <TouchableOpacity 
             style={styles.menuItem} 
-            onPress={() => navigateTo("Currency")}
+            onPress={() => navigateTo("CurrencyList")} 
           >
             <Text style={styles.menuText}>Moedas</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.menuItem} 
-            onPress={() => navigateTo("Users")}
+            onPress={() => navigateTo("Users")} 
           >
             <Text style={styles.menuText}>Usuários</Text>
           </TouchableOpacity>
@@ -105,13 +103,28 @@ export const Header = () => {
           <View style={styles.divider} />
 
           {isLogged ? (
-            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-              <View style={styles.logoutContainer}>
-                <Feather name="log-out" size={18} color="#ef4444" />
-                <Text style={styles.logoutText}>Sair</Text>
-              </View>
-            </TouchableOpacity>
+            <>
+              {/* Opção de Sair (na lista) */}
+              <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+                <View style={styles.logoutContainer}>
+                  <Feather name="log-out" size={18} color="#ef4444" />
+                  <Text style={styles.logoutText}>Sair</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Botão Principal: Ver Perfil */}
+              <TouchableOpacity 
+                style={styles.loginButton} 
+                onPress={() => navigateTo("Profile")}
+              >
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                   <Feather name="user" size={20} color="#000" />
+                   <Text style={styles.loginButtonText}>Ver meu perfil</Text>
+                </View>
+              </TouchableOpacity>
+            </>
           ) : (
+            /* Botão Principal: Entrar */
             <TouchableOpacity 
               style={styles.loginButton} 
               onPress={() => navigateTo("Login")}
@@ -128,8 +141,8 @@ export const Header = () => {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    backgroundColor: "#000", // Fundo preto igual ao Web
-    zIndex: 10, // Garante que o menu fique sobre o conteúdo
+    backgroundColor: "#000",
+    zIndex: 100, 
     borderBottomWidth: 1,
     borderBottomColor: "#333",
   },
@@ -142,12 +155,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
-  },
-  // Estilos da Logo
-  logoImage: {
-    width: 120,
-    height: 40,
-    resizeMode: 'contain'
   },
   logoPlaceholder: {
     flexDirection: 'row',
@@ -162,11 +169,15 @@ const styles = StyleSheet.create({
   
   // Menu Mobile Dropdown
   mobileMenu: {
-    backgroundColor: "#111", // Um pouco mais claro que o fundo
+    backgroundColor: "#111", 
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#333",
+    // Se quiser que flutue sobre o conteúdo, descomente as linhas abaixo:
+    // position: 'absolute',
+    // top: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 60 : 100,
+    // width: "100%",
   },
   menuItem: {
     paddingVertical: 15,
@@ -187,7 +198,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   loginButtonText: {
     color: "#000",
@@ -200,7 +211,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoutText: {
-    color: "#ef4444", // Vermelho
+    color: "#ef4444", 
     fontSize: 16,
     fontWeight: "600",
   }

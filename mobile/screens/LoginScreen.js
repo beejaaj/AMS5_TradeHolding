@@ -16,9 +16,6 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons"; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authAPI } from "../services/API";
-// Se você tiver o arquivo de API configurado no React Native, importe aqui.
-// Caso contrário, use a URL direta no fetch.
-// import { authAPI } from "@/services/API"; 
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -28,13 +25,11 @@ export default function LoginScreen({ navigation }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
- // Verificar token ao montar (Auto-Login)
   useEffect(() => {
     const checkToken = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
         if (token) {
-          // Se já tem token, vai direto para Home
           navigation.replace("Home"); 
         }
       } catch (e) {
@@ -44,7 +39,6 @@ export default function LoginScreen({ navigation }) {
     checkToken();
   }, []);
 
-  // Limpar mensagens após 5 segundos
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -68,7 +62,6 @@ export default function LoginScreen({ navigation }) {
     try {
       console.log("Tentando login em:", authAPI.login());
 
-      // --- LÓGICA DE API REAL ---
       const response = await fetch(authAPI.login(), {
         method: "POST",
         headers: { 
@@ -78,13 +71,11 @@ export default function LoginScreen({ navigation }) {
         body: JSON.stringify({ email, password }),
       });
 
-      // Tenta ler o JSON. Se a API retornar erro HTML (comum em erros de servidor), isso vai falhar
       const data = await response.json().catch(() => {
           throw new Error("Erro de comunicação com o servidor (Resposta inválida).");
       });
 
       if (!response.ok) {
-        // Usa a mensagem do backend ou uma genérica
         throw new Error(data.message || "Credenciais inválidas ou erro no servidor.");
       }
 
@@ -92,18 +83,14 @@ export default function LoginScreen({ navigation }) {
           throw new Error("Token não recebido. Contate o suporte.");
       }
 
-      // --- SUCESSO ---
       console.log("Login OK! Token recebido:", data.token);
 
-      // Salvar Token no Armazenamento do Celular
       await AsyncStorage.setItem("token", data.token);
       
-      // Opcional: Salvar email para usar depois
       await AsyncStorage.setItem("userEmail", email);
 
       setSuccess("Login realizado com sucesso!");
       
-      // Redireciona para a Home após breve delay
       setTimeout(() => {
         navigation.replace("Home"); 
       }, 500);
@@ -120,10 +107,9 @@ export default function LoginScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="light" />
       
-      {/* Botão de Voltar */}
       <TouchableOpacity 
         style={styles.backButton} 
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.goBack("Home")}
       >
         <Feather name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
@@ -136,9 +122,7 @@ export default function LoginScreen({ navigation }) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo e Título */}
           <View style={styles.headerContainer}>
-             {/* Se tiver a imagem: <Image source={require('path/to/logo.png')} ... /> */}
             <View style={styles.logoPlaceholder}>
               <Text style={{fontSize: 40}}>🌑</Text>
             </View>
@@ -148,14 +132,11 @@ export default function LoginScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* Mensagens de Erro/Sucesso */}
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           {success ? <Text style={styles.successText}>{success}</Text> : null}
 
-          {/* Formulário */}
           <View style={styles.formContainer}>
             
-            {/* Input Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email (ou nome de usuário)</Text>
               <TextInput
@@ -169,7 +150,6 @@ export default function LoginScreen({ navigation }) {
               />
             </View>
 
-            {/* Input Senha */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Senha</Text>
               <View style={styles.passwordContainer}>
@@ -194,7 +174,6 @@ export default function LoginScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Botão Entrar */}
             <TouchableOpacity 
               style={styles.submitButton} 
               onPress={handleLogin}
@@ -207,7 +186,6 @@ export default function LoginScreen({ navigation }) {
               )}
             </TouchableOpacity>
 
-            {/* Link Cadastro */}
             <TouchableOpacity 
               style={styles.registerLink}
               onPress={() => navigation.navigate("CreateAccount")}

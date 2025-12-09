@@ -13,7 +13,6 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
-// 1. IMPORTE O SERVIÇO
 import userService from "../../services/userService";
 
 export default function AllUsersScreen() {
@@ -36,12 +35,10 @@ export default function AllUsersScreen() {
     setError("");
 
     try {
-      // 2. CHAMADA REAL DA API VIA SERVICE
       const data = await userService.getAll();
       setUsers(data);
     } catch (err) {
       console.error(err);
-      // Tratamento para Token Expirado (401)
       if (err.message.includes("401") || err.response?.status === 401) {
           Alert.alert("Sessão Expirada", "Faça login novamente.");
           navigation.navigate("Login");
@@ -77,10 +74,8 @@ export default function AllUsersScreen() {
   const confirmDelete = async (userId) => {
     setDeletingId(userId);
     try {
-      // 3. CHAMADA REAL DE DELETE
       await userService.delete(userId);
       
-      // Atualiza a lista localmente
       setUsers(prev => prev.filter(u => u.id !== userId));
       Alert.alert("Sucesso", "Usuário excluído com sucesso!");
 

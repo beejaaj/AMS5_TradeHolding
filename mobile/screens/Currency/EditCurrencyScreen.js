@@ -15,16 +15,16 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
-// import { currencyAPI } from "@/services/API";
+// 1. IMPORTE O SERVIÇO
+import currencyService from "../../services/currencyService";
 
 export default function EditCurrencyScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   
-  // Pegando o ID passado pela navegação
+  // ID recebido da navegação
   const { id } = route.params || {}; 
 
-  // Estado dos dados da moeda
   const [currency, setCurrency] = useState({
     symbol: "",
     name: "",
@@ -33,47 +33,38 @@ export default function EditCurrencyScreen() {
     status: "",
   });
 
-  // Estados de UI
-  const [fetching, setFetching] = useState(true); // Carregando dados iniciais
-  const [loading, setLoading] = useState(false);  // Salvando dados
+  const [fetching, setFetching] = useState(true); 
+  const [loading, setLoading] = useState(false); 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Carregar dados da moeda ao abrir a tela
+  // 2. BUSCAR DADOS AO CARREGAR
   useEffect(() => {
     async function fetchCurrency() {
-      if (!id) return;
+      if (!id) {
+          setError("ID da moeda não encontrado.");
+          setFetching(false);
+          return;
+      }
       
       setFetching(true);
       try {
-        // --- API REAL ---
-        /*
-        const res = await fetch(currencyAPI.getCurrencyDetails(id));
-        if (!res.ok) throw new Error("Erro ao buscar moeda");
-        const data = await res.json();
+        // Chamada real
+        const data = await currencyService.getCurrencyDetails(id);
+        
+        // Atualiza o estado com os dados vindos do backend
         setCurrency({
             symbol: data.symbol,
             name: data.name,
-            description: data.description,
+            description: data.description || "",
             backing: data.backing,
-            status: data.status.toLowerCase(),
-        });
-        */
-
-        // --- SIMULAÇÃO ---
-        await new Promise(r => setTimeout(r, 1000));
-        // Simulando dados que viriam do backend baseados no ID
-        setCurrency({
-          symbol: "BTC",
-          name: "Bitcoin",
-          description: "A primeira criptomoeda descentralizada.",
-          backing: "Energia",
-          status: "ativo",
+            status: data.status ? data.status.toLowerCase() : "",
         });
 
       } catch (err) {
-        setError(err.message || "Erro ao carregar moeda");
-        Alert.alert("Erro", "Não foi possível carregar os dados da moeda.");
+        console.error(err);
+        setError("Erro ao carregar dados da moeda.");
+        Alert.alert("Erro", "Não foi possível carregar os dados.");
         navigation.goBack();
       } finally {
         setFetching(false);
@@ -83,7 +74,6 @@ export default function EditCurrencyScreen() {
     fetchCurrency();
   }, [id]);
 
-  // Função auxiliar para atualizar o estado
   const updateField = (field, value) => {
     setCurrency(prev => ({ ...prev, [field]: value }));
   };
@@ -94,36 +84,26 @@ export default function EditCurrencyScreen() {
     setSuccess("");
 
     try {
-      // --- API REAL ---
-      /*
-      const res = await fetch(currencyAPI.updateCurrency(id), {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currency),
-      });
-      if (!res.ok) throw new Error("Erro ao atualizar moeda!");
-      */
-
-      // --- SIMULAÇÃO ---
-      await new Promise(r => setTimeout(r, 1500));
-      console.log("Dados Atualizados:", currency);
+      // 3. CHAMADA REAL DE ATUALIZAÇÃO
+      await currencyService.updateCurrency(id, currency);
 
       setSuccess("Moeda atualizada com sucesso!");
       
-      // Feedback visual antes de manter na tela ou sair
       setTimeout(() => {
-         setSuccess(""); // Limpa mensagem
-         // Opcional: navigation.goBack(); 
-      }, 2000);
+         setSuccess(""); 
+         navigation.goBack(); // Volta para a lista atualizada
+      }, 1500);
 
     } catch (err) {
-      setError(err.message || "Erro ao atualizar.");
+      console.error(err);
+      const msg = err.response?.data?.message || err.message || "Erro ao atualizar.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Renderização de Loading Inicial (Tela inteira)
+  // Loading Inicial (Tela Cheia)
   if (fetching) {
     return (
       <View style={[styles.container, styles.centerLoading]}>
@@ -137,7 +117,6 @@ export default function EditCurrencyScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Botão Voltar */}
       <TouchableOpacity 
         style={styles.backButton} 
         onPress={() => navigation.goBack()}
@@ -153,7 +132,6 @@ export default function EditCurrencyScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
           <View style={styles.headerContainer}>
             <View style={styles.logoPlaceholder}>
                <Text style={{fontSize: 30}}>🌑</Text>
@@ -161,11 +139,9 @@ export default function EditCurrencyScreen() {
             <Text style={styles.title}>Editar Moeda</Text>
           </View>
 
-          {/* Mensagens */}
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           {success ? <Text style={styles.successText}>{success}</Text> : null}
 
-          {/* Formulário */}
           <View style={styles.formContainer}>
             
             <View style={styles.inputGroup}>
@@ -215,7 +191,6 @@ export default function EditCurrencyScreen() {
               />
             </View>
 
-            {/* Status Custom Selector */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Status</Text>
               <View style={styles.statusContainer}>
@@ -286,7 +261,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   
-  // Header
   headerContainer: {
     alignItems: "center",
     marginBottom: 24,
@@ -308,7 +282,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 
-  // Feedback
   errorText: {
     color: "#f87171",
     backgroundColor: "rgba(248, 113, 113, 0.1)",
@@ -326,7 +299,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  // Form
   formContainer: {
     width: "100%",
   },
@@ -353,7 +325,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
 
-  // Status Style
   statusContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -379,7 +350,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Button
   submitButton: {
     backgroundColor: "#5c1a75",
     paddingVertical: 16,

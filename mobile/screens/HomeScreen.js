@@ -11,7 +11,6 @@ import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Importe seu Header customizado
 import { Header } from "../components/Header";
 
 // Dados Mockados (Você pode substituir pela chamada do currencyService futuramente)
@@ -32,7 +31,6 @@ export default function HomeScreen({ navigation }) {
       const checkLogin = async () => {
         try {
           const token = await AsyncStorage.getItem('token');
-          // Se tiver token, converte para true, senão false
           setIsLogged(!!token); 
         } catch (error) {
           console.log("Erro ao verificar login:", error);
@@ -55,7 +53,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* O Header já deve ter a lógica de navegação interna se precisar */}
+
       <Header /> 
       <StatusBar style="light" />
       
@@ -63,10 +61,8 @@ export default function HomeScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header / Logo Area */}
         <View style={styles.headerContainer}>
           <View style={styles.logo}>
-             {/* Placeholder da Logo */}
              <Text style={{fontSize: 30}}>🌑</Text> 
           </View>
           <Text style={styles.title}>Bem-vindo à Lunaria</Text>
@@ -75,7 +71,6 @@ export default function HomeScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* LÓGICA DE BOTÕES: Login/Cadastro ou Dashboard */}
         {!isLogged ? (
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity 
@@ -96,21 +91,20 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.actionButtonsContainer}>
              <TouchableOpacity 
                 style={[styles.button, styles.buttonPrimary]}
-                onPress={() => navigation.navigate("AllUsers")} // Exemplo: Ir para lista de usuários
+                onPress={() => navigation.navigate("Users")}
              >
               <Text style={styles.buttonTextPrimary}>Ver Usuários</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
                 style={[styles.button, styles.buttonOutline]}
-                onPress={() => navigation.navigate("CurrencyList")} // Exemplo: Ir para lista de moedas
+                onPress={() => navigation.navigate("Currency")}
              >
               <Text style={styles.buttonTextOutline}>Ver Moedas</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Tabela de Mercado */}
         <View style={styles.marketContainer}>
           <Text style={styles.sectionTitle}>Mercado de Cripto (Lunaria)</Text>
           
@@ -139,7 +133,6 @@ export default function HomeScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Gráfico Placeholder */}
         <View style={styles.chartContainer}>
           <Text style={styles.sectionTitle}>Distribuição</Text>
           <View style={styles.chartPlaceholder}>
@@ -148,15 +141,14 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Botão de Logout (Só aparece se logado) */}
-        {isLogged && (
+        {/**isLogged && (
           <TouchableOpacity 
             style={styles.logoutButton}
             onPress={handleLogout}
           >
             <Text style={styles.logoutText}>Sair da conta</Text>
           </TouchableOpacity>
-        )}
+        )**/}
 
       </ScrollView>
     </View>
