@@ -28,7 +28,16 @@ public class AuthController : ControllerBase
         }
 
         var token = GenerateJwtToken(user);
-        return Ok(new AuthResponseDTO { Token = token });
+        return Ok(new
+        {
+            Token = token,
+            User = new
+            {
+                Id = user.Id, 
+                Name = user.Name,
+                Email = user.Email
+            }
+        });
     }
 
 
@@ -36,8 +45,17 @@ public class AuthController : ControllerBase
     [HttpGet("profile")]
     public IActionResult GetProfile()
     {
-        var email = User.Identity.Name;
-        return Ok(new { message = "Rota protegida acessada!", user = email });
+        var email = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(email))
+            return Unauthorized(new { message = "Token inválido ou sem email." });
+
+        var user = _userService.GetUserByEmail(email);
+
+        if (user == null)
+            return NotFound(new { message = "Usuário não encontrado." });
+
+        return Ok(user);
     }
 
     private string GenerateJwtToken(UserDTO user)
@@ -71,5 +89,5 @@ public class AuthController : ControllerBase
         return tokenHandler.WriteToken(token);
     }
 
-    
+
 }

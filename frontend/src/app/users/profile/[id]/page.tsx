@@ -1,7 +1,7 @@
 "use client";
 
 import { UserProfile } from "@/components/users/UserProfile";
-import { Header } from '@/components/common/Header';
+import NavBar from "@/components/NavBar";
 
 type ProfilePageProps = {
   params: { id: string };
@@ -9,9 +9,9 @@ type ProfilePageProps = {
 
 export default function ProfilePage({ params }: ProfilePageProps) {
   return (
-    <div>
-      <Header />
-      <UserProfile params={params} />
+    <div className="min-h-screen bg-[#0B0E11] pt-20">
+      <NavBar />
+      <UserProfile id={params.id} />
     </div>
   );
 }

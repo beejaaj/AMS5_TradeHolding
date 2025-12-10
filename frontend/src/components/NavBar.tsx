@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import userService from "@/services/userService"; // Usando o serviço padronizado
+import userService from "@/services/userService"; 
 
 export default function NavBar() {
   const pathname = usePathname();
@@ -26,6 +26,8 @@ export default function NavBar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null); // ✅ Novo estado para a foto
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -34,22 +36,31 @@ export default function NavBar() {
     setIsLoggedIn(!!token);
 
     if (token) {
-        checkAdminStatus();
+        loadUserData(); // Renomeei para ficar mais claro que carrega tudo
     }
   }, [pathname]);
 
-  const checkAdminStatus = async () => {
+  const loadUserData = async () => {
       try {
-          // Busca o perfil usando o serviço centralizado
           const user = await userService.getProfile();
-          
-          // ✅ CORREÇÃO: Verifica se o ID é "1" OU "33"
           const userId = String(user.id);
-          if (userId === "1" || userId === "33") {
+          
+          setCurrentUserId(userId);
+
+          // ✅ Verifica e seta a foto do usuário
+          if (user.photo && user.photo.length > 50 && user.photo !== "default.png") {
+              setUserPhoto(user.photo);
+          } else {
+              setUserPhoto(null);
+          }
+
+          if (userId === "31" || userId === "32") {
               setIsAdmin(true);
+          } else {
+              setIsAdmin(false);
           }
       } catch (error) {
-          console.error("Erro ao verificar admin", error);
+          console.error("Erro ao carregar dados do usuário", error);
       }
   };
 
@@ -68,6 +79,8 @@ export default function NavBar() {
     localStorage.removeItem("userEmail");
     setIsLoggedIn(false);
     setIsAdmin(false);
+    setCurrentUserId(null);
+    setUserPhoto(null);
     setIsUserMenuOpen(false);
     router.push("/users/login");
   };
@@ -75,7 +88,7 @@ export default function NavBar() {
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, visible: isLoggedIn },
     { name: "Mercado", href: "/currency", icon: ArrowRightLeft, visible: true },
-    // A opção "Usuários" agora aparecerá para ID 1 e ID 33
+    { name: "Minhas Carteiras", href: "/wallets", icon: Wallet, visible: isLoggedIn },
     { name: "Usuários", href: "/users", icon: Users, visible: isLoggedIn && isAdmin }, 
   ];
 
@@ -127,12 +140,23 @@ export default function NavBar() {
              {isLoggedIn ? (
                <div className="relative" ref={dropdownRef}>
                  <button 
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 bg-[#1E2329] hover:bg-[#2B3139] border border-white/10 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                   className="flex items-center gap-2 bg-[#1E2329] hover:bg-[#2B3139] border border-white/10 text-white px-2 py-1.5 pr-4 rounded-full text-sm font-semibold transition-all group"
                  >
-                    <div className="w-6 h-6 rounded-full bg-[#8B5CF6] flex items-center justify-center text-xs text-white">
-                      <UserIcon size={14} />
+                    {/* ✅ ÁREA DA FOTO DO USUÁRIO */}
+                    <div className="w-8 h-8 rounded-full bg-[#2B3139] border border-[#8B5CF6]/30 flex items-center justify-center text-xs text-white overflow-hidden relative shadow-lg group-hover:border-[#8B5CF6] transition-colors">
+                      {userPhoto ? (
+                        <Image 
+                          src={userPhoto} 
+                          alt="User" 
+                          fill 
+                          className="object-cover" 
+                        />
+                      ) : (
+                        <UserIcon size={16} className="text-[#8B5CF6]" />
+                      )}
                     </div>
+                    
                     <span>Minha Conta</span>
                     <ChevronDown size={14} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                  </button>
@@ -145,7 +169,10 @@ export default function NavBar() {
                        exit={{ opacity: 0, y: 10 }}
                        className="absolute right-0 mt-2 w-48 bg-[#1E2329] border border-[#2B3139] rounded-xl shadow-xl overflow-hidden py-1"
                      >
-                        <Link href="/users/profile/me" className="flex items-center gap-2 px-4 py-3 text-sm text-[#EAECEF] hover:bg-[#2B3139] hover:text-[#8B5CF6] transition-colors">
+                        <Link 
+                          href={currentUserId ? `/users/profile/${currentUserId}` : "/users/profile/me"} 
+                          className="flex items-center gap-2 px-4 py-3 text-sm text-[#EAECEF] hover:bg-[#2B3139] hover:text-[#8B5CF6] transition-colors"
+                        >
                           <UserIcon size={16} /> Perfil
                         </Link>
                         <button 
@@ -208,21 +235,29 @@ export default function NavBar() {
               
               <div className="pt-4 border-t border-white/5 mt-4">
                  {isLoggedIn ? (
-                    <>
-                      <Link 
-                        href="/users/profile/me" 
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-2 px-4 py-3 text-[#EAECEF] hover:bg-white/5 rounded-lg"
-                      >
-                         <UserIcon size={20} /> Meu Perfil
-                      </Link>
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-[#F6465D] hover:bg-[#F6465D]/10 rounded-lg mt-2 font-medium"
-                      >
-                         <LogOut size={20} /> Sair da Conta
-                      </button>
-                    </>
+                   <>
+                     <Link 
+                       href={currentUserId ? `/users/profile/${currentUserId}` : "/users/profile/me"} 
+                       onClick={() => setIsOpen(false)}
+                       className="flex items-center gap-2 px-4 py-3 text-[#EAECEF] hover:bg-white/5 rounded-lg"
+                     >
+                        {/* FOTO TAMBÉM NO MOBILE */}
+                        <div className="w-6 h-6 rounded-full bg-[#2B3139] border border-[#8B5CF6]/30 flex items-center justify-center overflow-hidden relative">
+                          {userPhoto ? (
+                            <Image src={userPhoto} alt="User" fill className="object-cover" />
+                          ) : (
+                            <UserIcon size={14} className="text-[#8B5CF6]" />
+                          )}
+                        </div>
+                        Meu Perfil
+                     </Link>
+                     <button 
+                       onClick={handleLogout}
+                       className="w-full flex items-center gap-2 px-4 py-3 text-[#F6465D] hover:bg-[#F6465D]/10 rounded-lg mt-2 font-medium"
+                     >
+                        <LogOut size={20} /> Sair da Conta
+                     </button>
+                   </>
                  ) : (
                     <Link 
                         href="/users/login" 
