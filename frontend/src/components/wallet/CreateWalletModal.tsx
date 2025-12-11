@@ -36,7 +36,7 @@ export const CreateWalletModal = ({ isOpen, onClose, onSuccess }: Props) => {
             await walletService.createWallet({
                 userId: Number(user.id),
                 name,
-                currencySymbol: selectedCurrency
+                currency: selectedCurrency
             });
             onSuccess();
             onClose();

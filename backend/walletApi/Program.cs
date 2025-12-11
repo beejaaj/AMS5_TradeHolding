@@ -1,14 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using walletApi.Application.Services;
 using walletApi.Infrastructure.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer; // Adicionar
-using Microsoft.IdentityModel.Tokens; // Adicionar
-using System.Text; // Adicionar
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configurar a mesma Chave que está no appsettings da UserApi e Gateway
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+var keyString = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(keyString))
+{
+    keyString = "palavras123456789giganteparaumcarambaessachave"; 
+}
+var key = Encoding.ASCII.GetBytes(keyString);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -19,19 +23,23 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
+    options.UseSecurityTokenValidators = true; 
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false, // O Gateway já validou, mas é bom manter coerência
-        ValidateAudience = false
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero 
     };
 });
 
 builder.Services.AddDbContext<WalletDbContext>(opt => 
     opt.UseSqlite("Data Source=wallet.db"));
 
-builder.Services.AddHttpClient(); // Necessário para a Wallet falar com a CurrencyApi
+builder.Services.AddHttpClient(); 
 builder.Services.AddScoped<WalletService>();
 
 builder.Services.AddControllers();
@@ -46,7 +54,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication(); // <--- OBRIGATÓRIO: Adicione antes do Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

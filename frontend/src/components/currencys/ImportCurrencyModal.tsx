@@ -7,6 +7,8 @@ import { currencyAPI } from "@/services/API";
 
 // Lista simulada das principais moedas da Binance para importação
 const BINANCE_COINS = [
+  { symbol: "USD", name: "United States Dollar", backing: "Fiat" }, 
+  { symbol: "USDT", name: "Tether USD", backing: "USD" },
   { symbol: "BTC", name: "Bitcoin", backing: "USDT" },
   { symbol: "ETH", name: "Ethereum", backing: "USDT" },
   { symbol: "BNB", name: "Binance Coin", backing: "USDT" },

@@ -48,7 +48,7 @@ export const RegisterForm = () => {
         setLoading(true);
         try {
             await userService.register(formData);
-            router.push("/users");
+            router.push("/users/login");
         } catch (error) {
             alert("Erro ao cadastrar.");
         } finally {

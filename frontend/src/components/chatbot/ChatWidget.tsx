@@ -1,117 +1,199 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, X, Bot, Loader2 } from "lucide-react";
-import walletService from "@/services/walletService";
+import { MessageSquare, X, Send, Bot, Loader2, Sparkles } from "lucide-react";
+import chatbotService from "@/services/chatbotService"; 
 import userService from "@/services/userService";
+import { usePathname } from "next/navigation"; // <--- 1. Importar usePathname
+
+interface Message {
+    id: number;
+    text: string;
+    sender: 'user' | 'bot';
+}
 
 export const ChatWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{ text: string, from: 'bot' | 'user' }[]>([
-        { text: "Olá! Sou o assistente Lunaria. Posso ajudar com seu saldo ou trades. Tente: 'Qual meu saldo?' ou 'Comprar BTC 100'.", from: 'bot' }
+    const [messages, setMessages] = useState<Message[]>([
+        { id: 1, text: "Olá! 👋 Sou seu assistente financeiro. Toque em uma opção abaixo ou digite sua dúvida.", sender: 'bot' }
     ]);
-    const [input, setInput] = useState("");
+    
+    const [suggestions, setSuggestions] = useState<string[]>([
+        "Como funciona?", "Quais moedas tem?", "Ver meu saldo"
+    ]);
+
+    const [inputText, setInputText] = useState("");
     const [loading, setLoading] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const [userId, setUserId] = useState<number>(0);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    
+    // Hook para detectar mudança de página
+    const pathname = usePathname(); 
 
+    // 2. Atualizado: Recarrega usuário ao mudar de página ou abrir o chat
     useEffect(() => {
-        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }, [messages, isOpen]);
+        const loadUser = async () => {
+            try {
+                // Tenta pegar o token do storage primeiro para evitar chamada de API desnecessária
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    setUserId(0);
+                    return;
+                }
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
-        const msg = input;
-        setInput("");
-        setMessages(prev => [...prev, { text: msg, from: 'user' }]);
+                const user = await userService.getProfile();
+                setUserId(user && user.id ? Number(user.id) : 0);
+            } catch { 
+                setUserId(0); 
+            }
+        };
+        
+        loadUser();
+    }, [pathname, isOpen]); // <--- Dispara quando navega ou abre o chat
+
+    const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    useEffect(() => { scrollToBottom(); }, [messages, isOpen, suggestions]);
+
+    const sendMessage = async (text: string) => {
+        if (!text.trim()) return;
+
+        const userMsg: Message = { id: Date.now(), text: text, sender: 'user' };
+        setMessages(prev => [...prev, userMsg]);
+        setInputText("");
+        setSuggestions([]); 
         setLoading(true);
 
         try {
-            // Pega o ID do usuário logado para contextualizar a conversa
-            const user = await userService.getProfile();
-            const res = await walletService.sendMessage(Number(user.id), msg);
+            // Usa o userId atualizado do estado
+            const data = await chatbotService.sendMessage(userId, text);
             
-            // Adiciona resposta do bot
-            setMessages(prev => [...prev, { text: res.reply, from: 'bot' }]);
+            const botMsg: Message = { 
+                id: Date.now() + 1, 
+                text: data.reply || "Não entendi.", 
+                sender: 'bot' 
+            };
+            setMessages(prev => [...prev, botMsg]);
+            
+            if (data.suggestions && data.suggestions.length > 0) {
+                setSuggestions(data.suggestions);
+            } else {
+                setSuggestions(["Ajuda", "Voltar ao início"]);
+            }
+
         } catch (error) {
-            console.error(error);
-            setMessages(prev => [...prev, { text: "Desculpe, estou com dificuldades de conexão no momento.", from: 'bot' }]);
+            setMessages(prev => [...prev, { id: Date.now()+1, text: "Erro de conexão.", sender: 'bot' }]);
         } finally {
             setLoading(false);
         }
     };
 
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        sendMessage(inputText);
+    };
+
     return (
-        <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+        <div className="fixed bottom-4 right-4 z-[100] flex flex-col items-end font-sans">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div 
-                        initial={{ opacity: 0, y: 20, scale: 0.9 }} 
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }} 
                         animate={{ opacity: 1, y: 0, scale: 1 }} 
-                        exit={{ opacity: 0, y: 20, scale: 0.9 }} 
-                        className="bg-[#1E2329] border border-[#2B3139] rounded-2xl shadow-2xl w-80 sm:w-96 h-[500px] flex flex-col overflow-hidden mb-4"
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="bg-[#1E2329] border border-[#2B3139] w-[90vw] sm:w-96 h-[500px] max-h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-4"
                     >
-                        {/* Header Chat */}
-                        <div className="p-4 bg-[#8B5CF6] flex justify-between items-center text-white shadow-md">
-                            <div className="flex items-center gap-2 font-bold">
-                                <div className="p-1 bg-white/20 rounded-full"><Bot size={18} /></div>
-                                Assistente IA
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-[#2B3139] to-[#1E2329] p-4 flex justify-between items-center border-b border-[#474D57] shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-[#8B5CF6] p-2 rounded-full shadow-lg shadow-[#8B5CF6]/20">
+                                    <Bot size={20} className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                                        Assistente Virtual <Sparkles size={12} className="text-[#FCD535]" />
+                                    </h3>
+                                    <p className="text-[10px] text-[#848E9C]">
+                                        {userId > 0 ? "● Conectado" : "○ Modo Visitante"}
+                                    </p>
+                                </div>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded transition-colors"><X size={20} /></button>
+                            <button onClick={() => setIsOpen(false)} className="text-[#848E9C] hover:text-white transition-colors"><X size={20} /></button>
                         </div>
 
-                        {/* Corpo Chat */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0B0E11]" ref={scrollRef}>
-                            {messages.map((m, i) => (
-                                <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                                        m.from === 'user' 
-                                        ? 'bg-[#8B5CF6] text-white rounded-tr-none' 
-                                        : 'bg-[#2B3139] text-[#EAECEF] rounded-tl-none border border-[#474D57]'
+                        {/* Área de Mensagens */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#0B0E11]/50">
+                            {messages.map((msg) => (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                    key={msg.id} 
+                                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                                        msg.sender === 'user' 
+                                            ? 'bg-[#8B5CF6] text-white rounded-br-none' 
+                                            : 'bg-[#2B3139] text-[#EAECEF] rounded-bl-none border border-[#474D57]'
                                     }`}>
-                                        {m.text.split('\n').map((line, idx) => (
-                                            <span key={idx}>{line}<br/></span>
-                                        ))}
+                                        <div className="whitespace-pre-wrap">{msg.text}</div>
                                     </div>
-                                </div>
+                                </motion.div>
                             ))}
                             {loading && (
                                 <div className="flex justify-start">
-                                    <div className="bg-[#2B3139] p-3 rounded-2xl rounded-tl-none border border-[#474D57] flex items-center gap-2 text-[#848E9C] text-xs">
-                                        <Loader2 className="animate-spin text-[#8B5CF6]" size={14} /> Digitando...
+                                    <div className="bg-[#2B3139] p-3 rounded-2xl rounded-bl-none border border-[#474D57]">
+                                        <Loader2 className="animate-spin text-[#8B5CF6]" size={16} />
                                     </div>
                                 </div>
                             )}
+                            <div ref={messagesEndRef} />
                         </div>
 
+                        {/* Área de Sugestões (Chips) */}
+                        {suggestions.length > 0 && !loading && (
+                            <div className="px-4 py-2 bg-[#1E2329] border-t border-[#2B3139] flex gap-2 overflow-x-auto custom-scrollbar shrink-0">
+                                {suggestions.map((sug, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => sendMessage(sug)}
+                                        className="whitespace-nowrap px-3 py-1.5 bg-[#2B3139] hover:bg-[#8B5CF6] border border-[#474D57] hover:border-[#8B5CF6] text-[#EAECEF] hover:text-white text-xs rounded-full transition-all active:scale-95"
+                                    >
+                                        {sug}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Input */}
-                        <div className="p-3 bg-[#1E2329] border-t border-[#2B3139] flex gap-2">
-                            <input 
-                                value={input} 
-                                onChange={(e) => setInput(e.target.value)} 
-                                onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-                                placeholder="Digite sua mensagem..." 
-                                className="flex-1 bg-[#0B0E11] border border-[#2B3139] rounded-xl px-4 py-2 text-white text-sm focus:border-[#8B5CF6] outline-none transition-all placeholder-[#474D57]" 
-                            />
-                            <button 
-                                onClick={handleSend} 
-                                disabled={!input.trim() || loading}
-                                className="bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:opacity-50 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-colors shadow-lg shadow-[#8B5CF6]/20"
-                            >
-                                <Send size={18} />
-                            </button>
-                        </div>
+                        <form onSubmit={handleFormSubmit} className="p-3 bg-[#1E2329] border-t border-[#2B3139] shrink-0">
+                            <div className="relative flex items-center gap-2">
+                                <input 
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    placeholder="Digite sua dúvida..."
+                                    className="w-full bg-[#0B0E11] text-[#EAECEF] rounded-xl pl-4 pr-12 py-3 border border-[#2B3139] focus:border-[#8B5CF6] outline-none text-sm transition-all"
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={!inputText.trim() || loading}
+                                    className="absolute right-2 p-2 bg-[#8B5CF6] text-white rounded-lg hover:bg-[#7C3AED] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                                >
+                                    <Send size={16} />
+                                </button>
+                            </div>
+                        </form>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Botão Flutuante */}
-            <button 
-                onClick={() => setIsOpen(!isOpen)} 
-                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white p-4 rounded-full shadow-xl shadow-[#8B5CF6]/40 transition-all hover:scale-110 active:scale-95 border-2 border-[#1E2329]"
+            {/* Botão Flutuante (Launcher) */}
+            <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsOpen(!isOpen)}
+                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white p-4 rounded-full shadow-xl shadow-[#8B5CF6]/40 transition-all flex items-center justify-center border-2 border-[#1E2329]"
             >
-                {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
-            </button>
+                {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
+            </motion.button>
         </div>
     );
 };

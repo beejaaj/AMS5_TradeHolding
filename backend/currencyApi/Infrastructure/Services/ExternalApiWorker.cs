@@ -16,7 +16,7 @@ namespace CurrencyAPI.Infrastructure.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IServiceProvider _services;
-        private readonly TimeSpan _interval = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan _interval = TimeSpan.FromSeconds(20);
         private readonly string _cryptoPricesUrl;
 
         public ExternalApiWorker(IHttpClientFactory httpClientFactory, IConfiguration configuration, IServiceProvider services)

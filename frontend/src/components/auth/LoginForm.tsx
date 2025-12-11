@@ -123,9 +123,6 @@ export const LoginForm = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <Link href="/forgot-password" className="forgot-password">
-              Esqueceu a senha?
-            </Link>
           </div>
 
           <button type="submit" disabled={loading} className="submit-button">
