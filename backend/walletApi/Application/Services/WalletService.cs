@@ -71,26 +71,37 @@ namespace walletApi.Application.Services
                 throw new Exception("Carteira de origem inválida.");
 
             if (sourceWallet.Balance < dto.Amount)
-                throw new Exception("Saldo insuficiente.");
+                throw new Exception($"Saldo insuficiente. Disponível: {sourceWallet.Balance}");
 
-            decimal priceFrom = await GetRealPriceAsync(sourceWallet.CurrencySymbol);
-            decimal priceTo = await GetRealPriceAsync(dto.ToCurrency);
+            string targetCurrency = dto.ToCurrency.ToUpper(); 
+            string sourceCurrency = sourceWallet.CurrencySymbol.ToUpper();
 
-            if (priceTo == 0) throw new Exception($"Preço inválido para {dto.ToCurrency}.");
+            // 1. Busca os preços
+            decimal priceFrom = await GetRealPriceAsync(sourceCurrency);
+            decimal priceTo = await GetRealPriceAsync(targetCurrency);
 
+            // 2. CORREÇÃO CRÍTICA: Valida AMBOS os preços
+            // Se o preço de origem for 0, o cálculo daria 0 e o dinheiro sumiria.
+            if (priceFrom <= 0) throw new Exception($"Preço inválido ou não encontrado para a moeda de origem: {sourceCurrency}");
+            if (priceTo <= 0) throw new Exception($"Preço inválido ou não encontrado para a moeda de destino: {targetCurrency}");
+
+            // 3. Cálculo Seguro
             decimal totalValueInUsd = dto.Amount * priceFrom;
             decimal finalAmount = totalValueInUsd / priceTo;
 
+            if (finalAmount <= 0) throw new Exception("O valor da troca resultou em zero. Verifique a quantidade.");
+
             var destWallet = await _context.Wallets
-                .FirstOrDefaultAsync(w => w.UserId == dto.UserId && w.CurrencySymbol == dto.ToCurrency);
+                .FirstOrDefaultAsync(w => w.UserId == dto.UserId && w.CurrencySymbol == targetCurrency);
 
             if (destWallet == null)
             {
+                Console.WriteLine($"[WALLET] Criando nova carteira para {targetCurrency}...");
                 destWallet = new Wallet
                 {
                     UserId = dto.UserId,
-                    Name = $"Carteira {dto.ToCurrency}",
-                    CurrencySymbol = dto.ToCurrency,
+                    Name = $"Carteira {targetCurrency}",
+                    CurrencySymbol = targetCurrency, 
                     Balance = 0
                 };
                 _context.Wallets.Add(destWallet);
@@ -103,13 +114,21 @@ namespace walletApi.Application.Services
             {
                 UserId = dto.UserId,
                 Type = "TRADE",
-                Description = $"Troca {sourceWallet.CurrencySymbol} -> {destWallet.CurrencySymbol}",
+                Description = $"Troca {sourceCurrency} -> {targetCurrency}",
                 Amount = -dto.Amount,
-                CurrencySymbol = sourceWallet.CurrencySymbol
+                CurrencySymbol = sourceCurrency
+            });
+
+            _context.Transactions.Add(new Transaction
+            {
+                UserId = dto.UserId,
+                Type = "TRADE_IN",
+                Description = $"Recebido de troca {sourceCurrency}",
+                Amount = finalAmount,
+                CurrencySymbol = targetCurrency
             });
 
             await _context.SaveChangesAsync();
-            Console.WriteLine($"[WALLET] Trade realizado: {finalAmount} {dto.ToCurrency}");
         }
 
         private async Task<decimal> GetRealPriceAsync(string symbol)
@@ -120,10 +139,12 @@ namespace walletApi.Application.Services
 
             try
             {
-                // URL da sua CurrencyAPI
-                var url = "http://localhost:5266/api/Currency";
+                // URL original mantida conforme sua solicitação
+                var url = "http://localhost:5266/Currency";
+                
                 var response = await _http.GetAsync(url);
-                if (!response.IsSuccessStatusCode) return 0;
+                if (!response.IsSuccessStatusCode) 
+                    throw new Exception($"Erro HTTP {response.StatusCode} ao buscar cotação."); // Lança erro em vez de retornar 0
 
                 var json = await response.Content.ReadAsStringAsync();
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -134,16 +155,90 @@ namespace walletApi.Application.Services
                 if (currency != null && currency.Histories != null && currency.Histories.Any())
                 {
                     decimal price = currency.Histories.OrderByDescending(h => h.Date).First().Value;
-                    // Correção temporária para o bug de escala da sua API (valores em trilhões)
+                    // Correção de escala
                     if (price > 100000000) price = price / 100000000m;
                     return price;
+                }
+                else 
+                {
+                    // Lança erro específico se não achar histórico, para evitar cálculo com zero
+                    throw new Exception($"Sem histórico de preço para {symbol}");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ERRO] Falha ao obter preço: {ex.Message}");
+                // Relança a exceção para o TradeAsync saber que deu erro e cancelar a operação
+                throw; 
             }
-            return 0;
+        }
+        public async Task<object> GetWalletDetailsAsync(int userId, int walletId)
+        {
+            var wallet = await _context.Wallets.FindAsync(walletId);
+
+            if (wallet == null || wallet.UserId != userId)
+                throw new Exception("Carteira não encontrada ou acesso negado.");
+
+            // Busca transações baseadas no Usuário e na Moeda da carteira
+            // (Como sua tabela Transaction não tem WalletId, filtramos pela moeda)
+            var transactions = await _context.Transactions
+                .Where(t => t.UserId == userId && t.CurrencySymbol == wallet.CurrencySymbol)
+                .OrderByDescending(t => t.Id) // Mais recentes primeiro
+                .ToListAsync();
+
+            return new { Wallet = wallet, Transactions = transactions };
+        }
+
+        // --- NOVO MÉTODO: Transferência entre Usuários (P2P) ---
+        public async Task TransferAsync(TransferDto dto)
+        {
+            // 1. Validar Origem
+            var sourceWallet = await _context.Wallets.FindAsync(dto.FromWalletId);
+            if (sourceWallet == null || sourceWallet.UserId != dto.UserId)
+                throw new Exception("Carteira de origem inválida.");
+
+            if (sourceWallet.Balance < dto.Amount)
+                throw new Exception("Saldo insuficiente.");
+
+            // 2. Validar Destino (Pode ser de OUTRO usuário)
+            var destWallet = await _context.Wallets.FindAsync(dto.ToWalletId);
+            if (destWallet == null)
+                throw new Exception($"Carteira de destino (ID: {dto.ToWalletId}) não encontrada.");
+
+            // 3. Validar Mesma Moeda
+            if (sourceWallet.CurrencySymbol != destWallet.CurrencySymbol)
+                throw new Exception($"Não é possível transferir {sourceWallet.CurrencySymbol} para uma carteira de {destWallet.CurrencySymbol}.");
+
+            if (sourceWallet.Id == destWallet.Id)
+                throw new Exception("Você não pode transferir para a mesma carteira.");
+
+            // 4. Executar Transferência
+            sourceWallet.Balance -= dto.Amount;
+            destWallet.Balance += dto.Amount;
+
+            // 5. Registrar Transações (Para quem enviou e para quem recebeu)
+            
+            // Saída (Quem enviou)
+            _context.Transactions.Add(new Transaction
+            {
+                UserId = dto.UserId,
+                Type = "TRANSFER_OUT",
+                Description = $"Envio para Carteira #{destWallet.Id}",
+                Amount = -dto.Amount,
+                CurrencySymbol = sourceWallet.CurrencySymbol
+            });
+
+            // Entrada (Quem recebeu)
+            _context.Transactions.Add(new Transaction
+            {
+                UserId = destWallet.UserId, // ID do dono da carteira destino
+                Type = "TRANSFER_IN",
+                Description = $"Recebido da Carteira #{sourceWallet.Id}",
+                Amount = dto.Amount,
+                CurrencySymbol = destWallet.CurrencySymbol
+            });
+
+            await _context.SaveChangesAsync();
         }
 
         private class CurrencyResponse { public string Symbol { get; set; } public List<HistoryResponse> Histories { get; set; } }

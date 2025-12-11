@@ -1,5 +1,5 @@
-//const BASE_GATEWAY_URL = "http://localhost:5266";
-const BASE_GATEWAY_URL = "https://organic-garbanzo-q765vw796qw3gv5-5266.app.github.dev";
+const BASE_GATEWAY_URL = "http://localhost:5266";
+//const BASE_GATEWAY_URL = "https://organic-garbanzo-q765vw796qw3gv5-5266.app.github.dev";
 
 const crudAPI = (basePath: string) => ({
   create: () => `${basePath}`,

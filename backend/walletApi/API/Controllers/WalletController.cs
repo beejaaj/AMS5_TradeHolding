@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using walletApi.API.DTOs;
 using walletApi.Application.Services;
 
@@ -15,7 +16,7 @@ namespace walletApi.API.Controllers
             _service = service;
         }
 
-        // Listar todas as carteiras do usuário
+        [Authorize]
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetWallets(int userId)
         {
@@ -23,7 +24,7 @@ namespace walletApi.API.Controllers
             return Ok(wallets);
         }
 
-        // Criar nova carteira (ex: criar uma carteira de poupança em BTC)
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateWalletDto dto)
         {
@@ -31,6 +32,7 @@ namespace walletApi.API.Controllers
             return Ok(wallet);
         }
 
+        [Authorize]
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositDto dto)
         {
@@ -42,6 +44,7 @@ namespace walletApi.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("trade")]
         public async Task<IActionResult> Trade([FromBody] TradeDto dto)
         {
@@ -52,5 +55,30 @@ namespace walletApi.API.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
-    }
-}
+
+        [Authorize]
+        [HttpGet("details/{id}")]
+        public async Task<IActionResult> GetDetails(int id, [FromQuery] int userId)
+        {
+            try {
+                var data = await _service.GetWalletDetailsAsync(userId, id);
+                return Ok(data);
+            } catch (Exception ex) {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("transfer")]
+        public async Task<IActionResult> Transfer([FromBody] TransferDto dto)
+        {
+            try {
+                await _service.TransferAsync(dto);
+                return Ok(new { message = "Transferência realizada com sucesso!" });
+            } catch (Exception ex) {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+    } 
+} 
