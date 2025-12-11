@@ -20,8 +20,10 @@ export const TradeModal = ({ isOpen, onClose, onSuccess, wallets }: Props) => {
     useEffect(() => {
         if (isOpen) {
             const load = async () => {
-                const res = await fetch(currencyAPI.getAllCurrency());
-                if (res.ok) setCurrencies(await res.json());
+                try {
+                    const res = await fetch(currencyAPI.getAllCurrency());
+                    if (res.ok) setCurrencies(await res.json());
+                } catch (e) { console.error(e); }
             };
             load();
         }
@@ -30,17 +32,52 @@ export const TradeModal = ({ isOpen, onClose, onSuccess, wallets }: Props) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
         try {
+            // 1. Busca e valida o Usuário
             const user = await userService.getProfile();
-            await walletService.trade({
+            if (!user || !user.id) {
+                alert("Erro: Não foi possível identificar o usuário logado.");
+                setLoading(false);
+                return;
+            }
+
+            // 2. Valida os dados numéricos antes de enviar
+            const payload = {
                 userId: Number(user.id),
                 fromWalletId: Number(fromWalletId),
-                toCurrency,
+                toCurrency: toCurrency,
                 amount: parseFloat(amount)
-            });
+            };
+
+            if (isNaN(payload.userId) || isNaN(payload.fromWalletId) || isNaN(payload.amount)) {
+                alert("Erro: Dados inválidos (verifique se selecionou a carteira e o valor).");
+                setLoading(false);
+                return;
+            }
+
+            // 3. Envia para o backend
+            await walletService.trade(payload);
+            
             onSuccess();
             onClose();
-        } catch { alert("Erro no trade."); } finally { setLoading(false); }
+            // Limpa o formulário
+            setAmount("");
+            setFromWalletId("");
+            setToCurrency("");
+
+        } catch (error: any) {
+            console.error("Erro no trade:", error);
+            
+            // Tenta exibir a mensagem de erro específica do Backend (ex: "Saldo Insuficiente")
+            if (error.response && error.response.data && error.response.data.error) {
+                alert(`Falha no Trade: ${error.response.data.error}`);
+            } else {
+                alert("Erro ao realizar o trade. Verifique o console.");
+            }
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     if (!isOpen) return null;
@@ -69,7 +106,7 @@ export const TradeModal = ({ isOpen, onClose, onSuccess, wallets }: Props) => {
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-[#848E9C] uppercase">Valor a Converter</label>
-                        <input required type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] rounded-xl px-4 py-3 focus:border-[#FCD535] outline-none" placeholder="0.00" />
+                        <input required type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-[#0B0E11] border border-[#2B3139] text-[#EAECEF] rounded-xl px-4 py-3 focus:border-[#FCD535] outline-none" placeholder="0.00" step="0.01" />
                     </div>
                     <button type="submit" disabled={loading} className="w-full bg-[#FCD535] hover:bg-[#F0B90B] text-[#1E2329] font-bold py-3 rounded-xl transition-all flex justify-center gap-2">
                         {loading ? <Loader2 className="animate-spin" /> : "Executar Trade"}

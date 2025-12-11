@@ -5,23 +5,24 @@ import NavBar from "@/components/NavBar";
 import walletService from "@/services/walletService";
 import userService from "@/services/userService";
 import { Wallet } from "@/services/types";
-import { Plus, ArrowDownCircle, ArrowRightLeft, RefreshCw, Wallet as WalletIcon } from "lucide-react";
+import { Plus, ArrowDownCircle, ArrowRightLeft, RefreshCw, Wallet as WalletIcon, ChevronRight } from "lucide-react";
 import { CreateWalletModal } from "@/components/wallet/CreateWalletModal";
 import { DepositModal } from "@/components/wallet/DepositModal";
 import { TradeModal } from "@/components/wallet/TradeModal";
+import { useRouter } from "next/navigation"; // <--- 1. Importar useRouter
 
 export default function WalletsPage() {
     const [wallets, setWallets] = useState<Wallet[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [modal, setModal] = useState<'create' | 'deposit' | 'trade' | null>(null);
+    const router = useRouter(); // <--- 2. Inicializar router
 
     const fetchWallets = async () => {
         setLoading(true);
         setError("");
         try {
             const user = await userService.getProfile();
-            // Garante que o ID seja numérico para a API de Wallet se ela esperar int
             const userId = Number(user.id);
             if (!userId) throw new Error("ID de usuário inválido");
 
@@ -83,16 +84,25 @@ export default function WalletsPage() {
                                 <button onClick={() => setModal('create')} className="text-[#8B5CF6] font-bold hover:underline">Criar sua primeira carteira</button>
                             </div>
                         ) : wallets.map(w => (
-                            <div key={w.id} className="bg-[#1E2329] border border-[#2B3139] p-6 rounded-2xl shadow-xl hover:border-[#8B5CF6]/50 transition-all group relative overflow-hidden">
+                            // <--- 3. CARD CLICÁVEL ---
+                            <div 
+                                key={w.id} 
+                                onClick={() => router.push(`/wallets/${w.id}`)}
+                                className="cursor-pointer bg-[#1E2329] border border-[#2B3139] p-6 rounded-2xl shadow-xl hover:border-[#8B5CF6]/50 hover:bg-[#2B3139] active:scale-[0.98] transition-all group relative overflow-hidden"
+                            >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6]/5 rounded-full blur-2xl -z-10 group-hover:bg-[#8B5CF6]/10 transition-all" />
                                 
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="p-3 bg-[#0B0E11] rounded-xl text-[#8B5CF6] font-bold text-xl border border-[#2B3139] shadow-inner">
                                         {w.currencySymbol ? w.currencySymbol.substring(0, 2).toUpperCase() : "$"}
                                     </div>
-                                    <span className="text-xs bg-[#2B3139] px-2 py-1 rounded text-[#848E9C] uppercase font-bold tracking-wider border border-[#474D57]">
-                                        {w.currencySymbol}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs bg-[#2B3139] px-2 py-1 rounded text-[#848E9C] uppercase font-bold tracking-wider border border-[#474D57]">
+                                            {w.currencySymbol}
+                                        </span>
+                                        {/* Ícone indicando que é clicável */}
+                                        <ChevronRight size={16} className="text-[#474D57] group-hover:text-white transition-colors" />
+                                    </div>
                                 </div>
                                 
                                 <h3 className="text-lg font-bold text-white mb-1 truncate" title={w.name}>{w.name}</h3>

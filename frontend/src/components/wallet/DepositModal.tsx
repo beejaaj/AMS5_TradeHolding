@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, ArrowDownCircle, Loader2 } from "lucide-react";
 import walletService from "@/services/walletService";
+import userService from "@/services/userService"; // <--- 1. IMPORTAR USER SERVICE
 import { Wallet } from "@/services/types";
 
 interface Props { isOpen: boolean; onClose: () => void; onSuccess: () => void; wallets: Wallet[]; }
@@ -17,14 +18,34 @@ export const DepositModal = ({ isOpen, onClose, onSuccess, wallets }: Props) => 
         e.preventDefault();
         setLoading(true);
         try {
-            await walletService.deposit({ walletId: Number(walletId), amount: parseFloat(amount) });
+            // <--- 2. BUSCAR O USUÁRIO LOGADO
+            const user = await userService.getProfile();
+            
+            if (!user.id) {
+                alert("Erro: ID do usuário não encontrado.");
+                return;
+            }
+
+            // <--- 3. ENVIAR O USERID JUNTO
+            await walletService.deposit({ 
+                userId: Number(user.id), 
+                walletId: Number(walletId), 
+                amount: parseFloat(amount) 
+            });
+            
             onSuccess();
             onClose();
-        } catch { alert("Erro no depósito."); } finally { setLoading(false); }
+        } catch (error) { // Adicione 'error' para logar se quiser
+            console.error(error);
+            alert("Erro no depósito."); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     if (!isOpen) return null;
 
+    // ... o restante do return (JSX) permanece igual
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#1E2329] border border-[#2B3139] rounded-2xl shadow-2xl w-full max-w-md">
