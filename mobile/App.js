@@ -15,6 +15,7 @@ import EditUserScreen from "./screens/EditUserSCreen";
 import WalletsScreen from "./screens/wallets/WalletScreen";
 import AddUserScreen from "./screens/Users/AddUserScreen";
 import WalletDetailsScreen from "./screens/wallets/WalletDetailScreen";
+import ChatFloatingButton from "./components/ChatFloatingButton";
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +38,7 @@ export default function App() {
         <Stack.Screen name="WalletDetails" component={WalletDetailsScreen} />
 
       </Stack.Navigator>
+      <ChatFloatingButton />
     </NavigationContainer>
   );
 }
