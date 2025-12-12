@@ -49,6 +49,15 @@ export const EditCurrency = ({ id }: { id: string }) => {
             setInitialLoading(false);
         }
     }
+const getHeaders = () => {
+    const token = localStorage.getItem("token")?.trim().replace(/['"]+/g, '');
+
+    return {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` })
+    };
+};
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -60,27 +69,31 @@ export const EditCurrency = ({ id }: { id: string }) => {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const res = await fetch(currencyAPI.updateCurrency(id), {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            });
+    e.preventDefault();
+    setLoading(true);
 
-            if (res.ok) {
-                router.push("/currency");
-            } else {
-                alert("Erro ao atualizar.");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Erro de conexão.");
-        } finally {
-            setLoading(false);
+    try {
+        const res = await fetch(currencyAPI.updateCurrency(id), {
+            method: "PUT",
+            headers: getHeaders(),
+            body: JSON.stringify(formData),
+        });
+
+        if (res.ok) {
+            router.push("/currency");
+        } else {
+            const err = await res.text();
+            console.error("Erro:", err);
+            alert("Erro ao atualizar.");
         }
-    };
+    } catch (error) {
+        console.error(error);
+        alert("Erro de conexão.");
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     if (initialLoading) {
         return <div className="flex justify-center items-center h-[60vh]"><Loader2 className="animate-spin text-[#8B5CF6]" size={48} /></div>;

@@ -36,7 +36,27 @@ const currencyService = {
 
     async updateCurrency(id: number | string, currencyData: Currency): Promise<void> {
         const headers = await getHeaders();
-        await axios.put(currencyAPI.updateCurrency(id), currencyData, { headers });
+        
+        // CORREÇÃO: Forçar PascalCase para garantir compatibilidade com .NET
+        const payload = {
+            Id: id, // Alguns backends exigem o ID no corpo também
+            Symbol: currencyData.symbol,
+            Name: currencyData.name,
+            Description: currencyData.description || "",
+            Backing: currencyData.backing,
+            Status: currencyData.status,
+            Reverse: !!currencyData.reverse // Garante booleano
+        };
+
+        try {
+            console.log("Payload Update:", payload); // Debug
+            
+            // Note que o ID vai na URL E no corpo (padrão comum em APIs REST .NET)
+            await axios.put(currencyAPI.updateCurrency(id), payload, { headers });
+        } catch (error: any) {
+            console.error("Erro Update Backend:", error.response?.data || error.message);
+            throw error;
+        }
     },
 
     async deleteCurrency(id: number | string): Promise<void> {

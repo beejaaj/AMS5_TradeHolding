@@ -65,7 +65,7 @@ export default function LoginScreen({ navigation }) {
       
       <TouchableOpacity 
         style={styles.backButton} 
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.navigate("Home")}
       >
         <Feather name="arrow-left" size={24} color="#848E9C" />
       </TouchableOpacity>

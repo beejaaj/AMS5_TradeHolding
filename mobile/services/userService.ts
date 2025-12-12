@@ -79,6 +79,7 @@ const userService = {
         const headers = await getHeaders();
         await axios.delete(userAPI.delete(id), { headers });
     },
+    
 };
 
 export default userService;
