@@ -81,7 +81,7 @@ export const CurrencyChart = ({ currencyId, symbol }: { currencyId: string, symb
                             <span className="text-2xl sm:text-3xl font-bold text-[#848E9C] animate-pulse">---</span>
                         ) : (
                             <span className="text-2xl sm:text-3xl font-bold text-[#EAECEF]">
-                                {stats.current > 0 ? `R$ ${stats.current.toFixed(2)}` : "R$ 0.00"}
+                                {stats.current > 0 ? `US$ ${stats.current.toFixed(2)}` : "US$ 0.00"}
                             </span>
                         )}
                         
@@ -138,7 +138,7 @@ export const CurrencyChart = ({ currencyId, symbol }: { currencyId: string, symb
                                 tick={{fill: '#848E9C', fontSize: 10}} 
                                 tickLine={false} 
                                 axisLine={false} 
-                                tickFormatter={(val) => `R$${val}`}
+                                tickFormatter={(val) => `US$${val}`}
                                 width={55}
                             />
                             <Tooltip 

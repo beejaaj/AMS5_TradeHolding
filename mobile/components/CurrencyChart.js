@@ -88,7 +88,7 @@ export default function CurrencyChart({ currencyId, symbol }) {
             <Text style={styles.label}>Preço de Mercado ({symbol})</Text>
             <View style={styles.priceRow}>
                 <Text style={styles.priceText}>
-                    {loading && !chartData ? "---" : `R$ ${stats.current.toFixed(2)}`}
+                    {loading && !chartData ? "---" : `US$ ${stats.current.toFixed(2)}`}
                 </Text>
                 {!loading && chartData && (
                     <View style={[styles.badge, isPositive ? styles.badgeGreen : styles.badgeRed]}>
@@ -126,7 +126,7 @@ export default function CurrencyChart({ currencyId, symbol }) {
                 bezier
                 style={{ borderRadius: 16, paddingRight: 40 }}
                 withInnerLines={false}
-                yAxisLabel="R$"
+                yAxisLabel="US$"
                 yAxisInterval={100}
             />
         ) : (

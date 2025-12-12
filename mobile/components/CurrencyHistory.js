@@ -57,7 +57,7 @@ export default function CurrencyHistory({ currencyId }) {
 
       <View style={styles.tableHeader}>
         <Text style={[styles.th, {flex: 1}]}>Data</Text>
-        <Text style={[styles.th, {flex: 1, textAlign: 'right'}]}>Preço (R$)</Text>
+        <Text style={[styles.th, {flex: 1, textAlign: 'right'}]}>Preço (US$)</Text>
         <Text style={[styles.th, {width: 60, textAlign: 'right'}]}>Var</Text>
       </View>
 
@@ -75,7 +75,7 @@ export default function CurrencyHistory({ currencyId }) {
                         <Feather name="calendar" size={12} color="#848E9C" />
                         <Text style={styles.dateText}>{format(new Date(h.date), "dd/MM HH:mm", {locale: ptBR})}</Text>
                     </View>
-                    <Text style={styles.priceText}>R$ {h.value.toFixed(2)}</Text>
+                    <Text style={styles.priceText}>US$ {h.value.toFixed(2)}</Text>
                     <View style={{width: 60, alignItems: 'flex-end'}}>
                         {variation.type === 'up' && <Feather name="trending-up" size={16} color="#0ECB81" />}
                         {variation.type === 'down' && <Feather name="trending-down" size={16} color="#F6465D" />}

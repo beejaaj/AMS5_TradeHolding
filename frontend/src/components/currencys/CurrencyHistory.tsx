@@ -67,7 +67,7 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
                     <thead className="text-xs text-[#848E9C] uppercase bg-[#0B0E11] border-b border-[#2B3139]">
                         <tr>
                             <th className="px-6 py-4 font-semibold">Data</th>
-                            <th className="px-6 py-4 font-semibold text-right">Preço (R$)</th>
+                            <th className="px-6 py-4 font-semibold text-right">Preço (US$)</th>
                             <th className="px-6 py-4 font-semibold text-right">Variação</th>
                         </tr>
                     </thead>
@@ -96,7 +96,7 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-[#EAECEF]">
-                                            R$ {h.value.toFixed(2)}
+                                            US$ {h.value.toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className={`flex items-center justify-end gap-1 font-bold text-xs
@@ -107,7 +107,7 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
                                                 {variation.type === 'down' && <TrendingDown size={16} />}
                                                 {variation.type === 'neutral' && <Minus size={16} />}
                                                 
-                                                {variation.type !== 'neutral' && `R$ ${variation.diff.toFixed(2)}`}
+                                                {variation.type !== 'neutral' && `US$ ${variation.diff.toFixed(2)}`}
                                                 {variation.type === 'neutral' && "-"}
                                             </div>
                                         </td>
