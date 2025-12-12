@@ -21,7 +21,6 @@ namespace CurrencyAPI.Infrastructure.Data
                 entity.Property(c => c.Symbol).IsRequired().HasMaxLength(10);
                 entity.Property(c => c.Description).IsRequired().HasMaxLength(1000);
                 entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
-                // Talvez Precise mudar como vai ser colocado os dois abaixo
                 entity.Property(c => c.Status).IsRequired().HasMaxLength(50);
                 entity.Property(c => c.Backing).IsRequired().HasMaxLength(100);
 

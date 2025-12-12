@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { X, Search, Download, Loader2, Coins } from "lucide-react";
 import { currencyAPI } from "@/services/API";
 
-// Lista simulada das principais moedas da Binance para importação
 const BINANCE_COINS = [
   { symbol: "USD", name: "United States Dollar", backing: "Fiat" }, 
   { symbol: "USDT", name: "Tether USD", backing: "USD" },
@@ -44,6 +43,14 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
   const handleImport = async (coin: typeof BINANCE_COINS[0]) => {
     setImportingSymbol(coin.symbol);
     try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Você precisa estar logado para realizar esta ação.");
+        setImportingSymbol(null);
+        return;
+      }
+
       const payload = {
         symbol: coin.symbol,
         name: coin.name,
@@ -53,11 +60,18 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
         reverse: false
       };
 
-      await fetch(currencyAPI.registerCurrency(), {
+      const response = await fetch(currencyAPI.registerCurrency(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
         body: JSON.stringify(payload),
       });
+
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status}`);
+      }
       
       setTimeout(() => {
         setImportingSymbol(null);
@@ -67,7 +81,7 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
     } catch (error) {
       console.error("Erro ao importar:", error);
       setImportingSymbol(null);
-      alert("Não foi possível importar. Verifique se a moeda já existe.");
+      alert("Não foi possível importar. Verifique se a moeda já existe ou se você tem permissão.");
     }
   };
 
@@ -79,7 +93,6 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="bg-[#1E2329] border border-[#2B3139] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]"
       >
-        {/* Header - Cor Roxa no Ícone */}
         <div className="p-5 border-b border-[#2B3139] flex justify-between items-center bg-[#1E2329]">
           <h3 className="text-xl font-bold text-[#EAECEF] flex items-center gap-2">
             <Coins className="text-[#8B5CF6]" size={24} /> 
@@ -90,7 +103,6 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
           </button>
         </div>
 
-        {/* Busca - Foco Roxo */}
         <div className="p-4 border-b border-[#2B3139] bg-[#15181D]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#848E9C]" size={18} />
@@ -105,7 +117,6 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
           </div>
         </div>
 
-        {/* Lista - Botões Roxos */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-[#0B0E11]">
           {filteredCoins.length === 0 ? (
             <div className="text-center py-12 flex flex-col items-center text-[#848E9C]">

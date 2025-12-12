@@ -26,7 +26,6 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
             const res = await fetch(historyAPI.GetByCurrency(currencyId));
             if (res.ok) {
                 const data: History[] = await res.json();
-                // Ordena do mais recente para o antigo para exibição
                 setHistory(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
                 setCurrentPage(1);
             }
@@ -37,10 +36,7 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
         }
     }
 
-    // Função para determinar variação
     const getVariation = (currentIndex: number, allItems: History[]) => {
-        // Como a lista está ordenada do mais recente para o mais antigo:
-        // O "anterior" no tempo é o índice atual + 1
         const previousItem = allItems[currentIndex + 1];
 
         if (!previousItem) return { type: 'neutral', diff: 0 };
@@ -53,10 +49,8 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
         return { type: 'neutral', diff: 0 };
     };
 
-    // Paginação
     const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    // Precisamos de um slice maior ou acesso ao array completo para comparar o último item da página com o próximo fora da página
     const currentItems = history.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return (
@@ -90,7 +84,6 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
                             <tr><td colSpan={3} className="p-8 text-center text-[#848E9C]">Nenhum histórico de preço.</td></tr>
                         ) : (
                             currentItems.map((h, i) => {
-                                // O índice real no array completo é startIndex + i
                                 const realIndex = startIndex + i;
                                 const variation = getVariation(realIndex, history);
                                 
@@ -126,7 +119,6 @@ export const CurrencyHistory = ({ currencyId }: { currencyId: string }) => {
                 </table>
             </div>
 
-            {/* Rodapé de Paginação */}
             {totalPages > 1 && (
                 <div className="p-4 border-t border-[#2B3139] flex justify-between items-center bg-[#0B0E11]">
                     <span className="text-xs text-[#848E9C]">

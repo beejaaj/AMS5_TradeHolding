@@ -15,16 +15,13 @@ export const CurrencyDashboard = () => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20 lg:h-[calc(100vh-100px)] h-auto">
             
-            {/* COLUNA ESQUERDA */}
             <div className="lg:col-span-3 lg:h-full h-[500px] flex flex-col">
                 <CurrencyList 
                     onSelect={setSelectedCurrency} 
-                    // Garante que o ID correto seja passado para a lista controlar o visual
                     selectedId={selectedCurrency?.id || null} 
                 />
             </div>
 
-            {/* COLUNA DIREITA */}
             <div className="lg:col-span-9 lg:h-full lg:overflow-y-auto custom-scrollbar pr-1">
                 <AnimatePresence mode="wait">
                     {selectedCurrency && selectedCurrency.id ? (
@@ -37,7 +34,6 @@ export const CurrencyDashboard = () => {
                         >
                             <CurrencyDetails currency={selectedCurrency} />
                             
-                            {/* Passa o ID para resetar o gráfico quando mudar */}
                             <CurrencyChart 
                                 currencyId={selectedCurrency.id} 
                                 symbol={selectedCurrency.symbol} 

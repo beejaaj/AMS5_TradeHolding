@@ -95,9 +95,26 @@
       ],
       "UpstreamPathTemplate": "/currency",
       "UpstreamHttpMethod": [
-        "GET",
-        "POST"
+        "GET"
       ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Currency",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5284
+        }
+      ],
+      "UpstreamPathTemplate": "/currency",
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/Currency/{id}",

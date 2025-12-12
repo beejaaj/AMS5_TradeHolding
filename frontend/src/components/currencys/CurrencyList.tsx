@@ -8,7 +8,7 @@ import {
   Plus, Search, Trash2, Coins, ChevronRight, Loader2, Edit, Download 
 } from "lucide-react";
 import { ImportCurrencyModal } from "./ImportCurrencyModal";
-import { ConfirmModal } from "@/components/common/ConfirmModal"; // Importe o novo Modal
+import { ConfirmModal } from "@/components/common/ConfirmModal"; 
 
 interface CurrencyListProps {
     onSelect: (c: Currency) => void;
@@ -22,7 +22,6 @@ export const CurrencyList = ({ onSelect, selectedId }: CurrencyListProps) => {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Estados para o Modal de Exclusão
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currencyToDelete, setCurrencyToDelete] = useState<string | null>(null);
 
@@ -41,7 +40,6 @@ export const CurrencyList = ({ onSelect, selectedId }: CurrencyListProps) => {
                 setCurrencies(data);
                 
                 if (data.length > 0 && !selectedId) {
-                    // Normaliza ID para garantir seleção
                     const first = data[0];
                     if(first.id || (first as any).Id) onSelect(first);
                 }
@@ -58,14 +56,12 @@ export const CurrencyList = ({ onSelect, selectedId }: CurrencyListProps) => {
         c.symbol.toLowerCase().includes(search.toLowerCase())
     );
 
-    // 1. Ao clicar na lixeira, apenas abre o modal e guarda o ID
     const handleDeleteClick = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         setCurrencyToDelete(id);
         setIsDeleteModalOpen(true);
     };
 
-    // 2. A exclusão real acontece aqui
     const confirmDelete = async () => {
     if (!currencyToDelete) return;
 
@@ -190,7 +186,6 @@ export const CurrencyList = ({ onSelect, selectedId }: CurrencyListProps) => {
                                                                 <Edit size={16} />
                                                             </button>
                                                         </Link>
-                                                        {/* Botão de Excluir Chama o Modal Agora */}
                                                         <button 
                                                             onClick={(e) => handleDeleteClick(e, itemId)} 
                                                             className="p-1.5 text-[#474D57] hover:text-[#F6465D] hover:bg-[#F6465D]/10 rounded-md transition-colors"
