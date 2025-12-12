@@ -14,6 +14,7 @@ import CurrencyDetailsScreen from "./screens/Currency/CurrencyDetailsScreen";
 import EditUserScreen from "./screens/EditUserSCreen";
 import WalletsScreen from "./screens/wallets/WalletScreen";
 import AddUserScreen from "./screens/Users/AddUserScreen";
+import WalletDetailsScreen from "./screens/wallets/WalletDetailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,7 @@ export default function App() {
         <Stack.Screen name="AllUsers" component={AllUsersScreen} />
         <Stack.Screen name="AddUser" component={AddUserScreen} />
         <Stack.Screen name="Wallets" component={WalletsScreen} />
+        <Stack.Screen name="WalletDetails" component={WalletDetailsScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

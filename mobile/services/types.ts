@@ -35,14 +35,14 @@ export interface Wallet {
   id: number;
   userId: number;
   name: string;
-  currencySymbol: string;
+  currency: string;
   balance: number;
 }
 
 export interface CreateWalletDto {
   userId: number;
   name: string;
-  currencySymbol: string;
+  currency: string;
 }
 
 export interface DepositDto {
@@ -55,4 +55,10 @@ export interface TradeDto {
   fromWalletId: number;
   toCurrency: string;
   amount: number;
+}
+
+export interface TransferDto {
+    fromWalletId: number;
+    toEmail: string;
+    amount: number;
 }
