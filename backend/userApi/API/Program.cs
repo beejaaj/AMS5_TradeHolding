@@ -3,6 +3,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using userApi.Domain.Entities;
+using userApi.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false
-        
+
     };
 });
 
@@ -83,6 +85,44 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
+
+// --- INÍCIO: Adicionar Usuário Padrão ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // IMPORTANTE: Verifique se 'UserDbContext' é o nome correto da sua classe de contexto
+        // Você pode precisar adicionar: using UserApi.Infrastructure.Data;
+        var context = services.GetRequiredService<UserDbContext>();
+
+        // Verifica se o usuário já existe pelo e-mail
+        if (!context.Users.Any(u => u.Email == "admin@gmail.com"))
+        {
+            // IMPORTANTE: Verifique se 'User' é o nome correto da sua entidade
+            // Preenchi os campos obrigatórios baseados no seu frontend (name, phone, address, photo)
+            var adminUser = new User 
+            {
+                Id = 1, // Se o banco for auto-increment, isso pode ser ignorado pelo EF
+                Name = "Administrador",
+                Email = "admin@gmail.com",
+                Password = "admin1234", // Nota: Em produção, utilize hash de senha!
+                Phone = "000000000",
+                Address = "Sistema",
+                Photo = "" 
+            };
+
+            context.Users.Add(adminUser);
+            context.SaveChanges();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Erro ao criar o usuário padrão (Seed). Verifique se o nome do DbContext e User estão corretos.");
+    }
+}
+// --- FIM: Adicionar Usuário Padrão ---
 
 if (app.Environment.IsDevelopment())
 {
