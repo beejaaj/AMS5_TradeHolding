@@ -9,7 +9,6 @@ from datetime import datetime
 
 app = FastAPI(title="Chatbot Service AMS - Intelligent Operations")
 
-# URL do Gateway (Ajuste se necessário para seu ambiente)
 GATEWAY_BASE = os.getenv('GATEWAY_BASE', 'http://localhost:5266')
 
 app.add_middleware(
@@ -20,7 +19,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- MODELOS ---
 class ChatRequest(BaseModel):
     userId: int
     message: str
@@ -30,10 +28,7 @@ class ChatResponse(BaseModel):
     reply: str
     suggestions: List[str] = []
 
-# --- FUNÇÕES AUXILIARES DE API (GET/POST) ---
-
 async def fetch_get(endpoint: str, token: str = ""):
-    """Faz GET autenticado ou não no Gateway"""
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     async with httpx.AsyncClient(timeout=10) as client:
         try:
@@ -43,7 +38,6 @@ async def fetch_get(endpoint: str, token: str = ""):
     return None
 
 async def fetch_post(endpoint: str, data: dict, token: str):
-    """Faz POST autenticado no Gateway"""
     if not token: return {"success": False, "error": "Token não fornecido"}
     
     headers = {"Authorization": f"Bearer {token}"}
@@ -60,8 +54,6 @@ async def fetch_post(endpoint: str, data: dict, token: str):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-# --- INTELIGÊNCIA: BUSCA DE CARTEIRAS ---
-
 async def find_wallet_id_by_symbol(user_id: int, symbol: str, token: str):
     wallets = await fetch_get(f"/wallet/{user_id}", token)
     if not wallets: return None
@@ -69,8 +61,6 @@ async def find_wallet_id_by_symbol(user_id: int, symbol: str, token: str):
         if w.get("currencySymbol", "").upper() == symbol.upper():
             return w.get("id")
     return None
-
-# --- PROCESSADORES DE COMANDOS (ACTIONS) ---
 
 async def action_criar_carteira(user_id: int, token: str, symbol: str):
     payload = { "userId": user_id, "name": f"Carteira {symbol.upper()}", "currency": symbol.upper() }
@@ -116,13 +106,12 @@ async def action_nova_moeda(token: str, symbol: str, name: str):
     if res["success"]: return f"🪙 Moeda **{name} ({symbol.upper()})** cadastrada no sistema!"
     return f"⚠️ Erro ao cadastrar moeda: {res.get('error')}"
 
-# --- SISTEMA DE INTELIGÊNCIA (INTENÇÕES) ---
-
 INTENT_PATTERNS = {
-    "saudacao": [r"\boi\b", r"\bol[aá]\b", r"bom dia", r"boa tarde", r"boa noite", r"eai", r"hey", r"ola"],
-    "saldo": [r"saldo", r"quanto tenho", r"meu dinheiro", r"minha conta", r"valores", r"patrimonio"],
-    "cotacao": [r"preço", r"cotação", r"valor do", r"quanto custa", r"tabela", r"listar moedas", r"quais moedas", r"ver moedas"],
-    "ajuda": [r"ajuda", r"socorro", r"o que voc[eê] faz", r"menu", r"opç[oõ]es", r"help"],
+    "saudacao": [r"\boi\b", r"\bol[aá]\b", r"bom dia", r"boa tarde", r"boa noite", r"eai", r"hey", r"ola", r"hi", r"hello"],
+    "saldo": [r"saldo", r"quanto tenho", r"meu dinheiro", r"minha conta", r"valores", r"patrimonio", r"grana", r"ver meu saldo"],
+    "cotacao": [r"preço", r"cotação", r"valor do", r"quanto custa", r"tabela", r"listar moedas", r"quais moedas", r"ver moedas", r"mercado", r"cotações"],
+    "ajuda": [r"ajuda", r"socorro", r"o que voc[eê] faz", r"menu", r"opç[oõ]es", r"help", r"suporte", r"comandos"],
+    "trade_info": [r"fazer trade", r"como comprar", r"quero investir", r"trocar moeda", r"negociar"], 
     "identidade": [r"quem [eé] voc[eê]", r"seu nome", r"quem criou"],
     "agradecimento": [r"obrigado", r"valeu", r"agradecido", r"tks", r"grato"]
 }
@@ -145,13 +134,13 @@ async def get_balance_formatted(user_id: int, token: str) -> dict:
     if wallets:
         has_usd = any(w.get("currencySymbol", "").upper() == "USD" for w in wallets)
         parts = [f"💳 **{w['name']}**: {w['balance']:,.2f} {w['currencySymbol']}" for w in wallets]
-        msg = "💰 **Seus Saldos:**\n" + "\n".join(parts)
-        suggestions = ["Depositar 100 USD", "Fazer Trade", "Ajuda"] if has_usd else ["Criar carteira USD"]
+        msg = "💰 **Seus Saldos Atuais:**\n" + "\n".join(parts)
+        suggestions = ["Fazer Trade", "Cotações", "Transferir"] if has_usd else ["Criar carteira USD", "Cotações"]
         return {"text": msg, "sug": suggestions}
     
     return {
-        "text": "Você ainda não possui carteiras ativas.", 
-        "sug": ["Criar carteira USD"]
+        "text": "Você ainda não possui carteiras ativas. Que tal começar?", 
+        "sug": ["Criar carteira USD", "Ajuda"]
     }
 
 def get_time_greeting():
@@ -160,21 +149,17 @@ def get_time_greeting():
     elif 12 <= hour < 18: return "Boa tarde"
     else: return "Boa noite"
 
-# --- LOOP PRINCIPAL ---
-
 @app.post('/chatbot/message', response_model=ChatResponse)
 async def handle_message(req: ChatRequest):
     text = req.message.strip()
     text_lower = text.lower()
     
-    # 1. COMANDOS DIRETOS (Prioridade Alta)
-
     match = re.search(r"criar carteira\s+(\w+)", text_lower)
     if match:
         if not req.token or req.userId <= 0: return ChatResponse(reply="🔒 Faça login para criar carteiras.", suggestions=["Ajuda"])
         symbol = match.group(1)
         reply = await action_criar_carteira(req.userId, req.token, symbol)
-        return ChatResponse(reply=reply, suggestions=[f"Depositar 100 {symbol.upper()}"])
+        return ChatResponse(reply=reply, suggestions=[f"Depositar 100 {symbol.upper()}", "Ver saldo"])
 
     match = re.search(r"depositar\s+(\d+)\s+(\w+)", text_lower)
     if match:
@@ -183,7 +168,7 @@ async def handle_message(req: ChatRequest):
         if "NO_WALLET" in reply:
             symbol = reply.split(":")[1]
             return ChatResponse(reply=f"⚠️ Você não tem uma carteira de **{symbol}**. Deseja criar agora?", suggestions=[f"Criar carteira {symbol}"])
-        return ChatResponse(reply=reply, suggestions=["Ver saldo"])
+        return ChatResponse(reply=reply, suggestions=["Ver saldo", "Fazer Trade"])
 
     match = re.search(r"transferir\s+(\d+)\s+(\w+)\s+para\s+(\d+)", text_lower)
     if match:
@@ -200,80 +185,117 @@ async def handle_message(req: ChatRequest):
         reply = await action_trade(req.userId, req.token, float(match.group(1)), match.group(2))
         if "NO_WALLET:USD" in reply:
             return ChatResponse(reply="⚠️ Para fazer trades, você precisa ter uma carteira de **USD** com saldo.", suggestions=["Criar carteira USD"])
-        return ChatResponse(reply=reply, suggestions=["Ver saldo"])
+        return ChatResponse(reply=reply, suggestions=["Ver saldo", "Cotações"])
 
     match = re.search(r"nova moeda\s+(\w+)\s+(.+)", text_lower)
     if match:
         if not req.token or req.userId <= 0: return ChatResponse(reply="🔒 Faça login para cadastrar moedas.", suggestions=["Ajuda"])
         reply = await action_nova_moeda(req.token, match.group(1), match.group(2))
-        return ChatResponse(reply=reply, suggestions=[f"Criar carteira {match.group(1).upper()}"])
+        return ChatResponse(reply=reply, suggestions=[f"Criar carteira {match.group(1).upper()}", "Cotações"])
 
-    # 2. INTENÇÕES (Linguagem Natural)
     intent = await detect_intent(text)
     
     if intent == "saudacao":
         greeting = get_time_greeting()
         if req.userId > 0:
             res = await get_balance_formatted(req.userId, req.token)
-            suggestions = res["sug"]
+            suggestion_list = ["Ver saldo", "Fazer Trade", "Cotações"]
+            reply = f"{greeting}! Sou o Assistente Inteligente da Lunaria.\n\n{res['text']}\n\nComo posso te ajudar agora?"
         else:
-            suggestions = ["Cotações", "Ajuda"]
-        reply = f"{greeting}! Sou o Assistente da Lunaria. Como posso te ajudar?"
-        return ChatResponse(reply=reply, suggestions=suggestions)
+            suggestion_list = ["Cotações", "Ajuda"]
+            reply = f"{greeting}! Sou o Assistente da Lunaria. Faça login para acessar sua carteira. Como posso ajudar?"
+        
+        return ChatResponse(reply=reply, suggestions=suggestion_list)
 
     elif intent == "saldo":
         res = await get_balance_formatted(req.userId, req.token)
         return ChatResponse(reply=res["text"], suggestions=res["sug"])
 
-    # --- LISTAGEM MELHORADA AQUI ---
+    elif intent == "trade_info":
+        currencies = await get_all_currencies()
+        sug_trades = [f"Comprar 10 {c['symbol']}" for c in currencies[:3] if c['symbol'] != 'USD']
+        if not sug_trades: sug_trades = ["Criar carteira USD", "Ver saldo"]
+        
+        return ChatResponse(
+            reply="🔄 **Modo de Negociação**\n\nPara comprar criptomoedas, você usa seu saldo em USD.\nExemplo de comando: **'Comprar 50 BTC'** (Isso usará 50 USD).\n\nDeseja ver as cotações antes?",
+            suggestions=["Ver Cotações"] + sug_trades
+        )
+
     elif intent == "cotacao" or "listar" in text_lower or "quais" in text_lower:
         currencies = await get_all_currencies()
         if currencies:
             lines = []
-            # Lista as top 10 moedas
-            for c in currencies[:10]:
+            sug_coins = []
+            for c in currencies:
                 symbol = c.get('symbol', 'N/A')
                 name = c.get('name', 'Moeda')
-                price_str = ""
                 
-                # Lógica para pegar o preço do histórico
                 histories = c.get('histories', [])
+                price_str = ""
+                trend_icon = "➖" 
+
                 if histories:
-                    # Ordena por data decrescente (mais recente primeiro) e pega o valor
-                    latest = sorted(histories, key=lambda x: x.get('date', ''), reverse=True)[0]
+                    sorted_hist = sorted(histories, key=lambda x: x.get('date', ''), reverse=True)
+                    latest = sorted_hist[0]
                     val = float(latest.get('value', 0))
                     
-                    # Formata o preço (se for muito pequeno, usa mais casas decimais)
+                    if len(sorted_hist) > 1:
+                        prev = sorted_hist[1]
+                        prev_val = float(prev.get('value', 0))
+                        if val > prev_val: trend_icon = "📈"
+                        elif val < prev_val: trend_icon = "📉"
+
                     if val > 1:
-                        price_str = f" 💲 {val:,.2f}"
+                        price_str = f"💲 {val:,.2f}"
                     else:
-                        price_str = f" 💲 {val:,.6f}"
+                        price_str = f"💲 {val:,.6f}"
                 else:
-                    price_str = " (Sem cotação)"
+                    price_str = "(Sem histórico)"
 
-                lines.append(f"• **{symbol}** - {name}{price_str}")
-            
+                lines.append(f"{trend_icon} **{symbol}** - {name}: {price_str}")
+                
+                if symbol != 'USD' and len(sug_coins) < 3:
+                    sug_coins.append(f"Comprar 10 {symbol}")
+
             msg = "\n".join(lines)
-            footer = ""
-            if len(currencies) > 10:
-                footer = f"\n\n*...e mais {len(currencies)-10} moedas.*"
-
             return ChatResponse(
-                reply=f"**📊 Mercado Cripto Atual:**\n\n{msg}{footer}", 
-                suggestions=["Criar carteira USD", "Ver meu saldo"]
+                reply=f"**📊 Mercado Cripto em Tempo Real:**\n\n{msg}\n\n_📈 Alta | 📉 Baixa | ➖ Estável_", 
+                suggestions=sug_coins + ["Ver meu saldo"]
             )
-        return ChatResponse(reply="Erro ao buscar cotações.", suggestions=["Ajuda"])
+        return ChatResponse(reply="Não consegui acessar os dados do mercado no momento.", suggestions=["Ajuda"])
+
+    elif intent == "identidade":
+        return ChatResponse(
+            reply="🤖 Eu sou o **Lunaria Bot**, seu assistente financeiro virtual. Fui criado para facilitar suas operações de carteira, trades e consultas!",
+            suggestions=["O que você faz?", "Ver saldo"]
+        )
+
+    elif intent == "agradecimento":
+        return ChatResponse(
+            reply="De nada! 😉 Estou sempre por aqui se precisar fazer mais dinheiro!",
+            suggestions=["Ver saldo", "Cotações"]
+        )
 
     elif intent == "ajuda":
         return ChatResponse(
-            reply="**Comandos:**\n\n- 'Criar carteira USD'\n- 'Depositar 100 USD'\n- 'Comprar 50 BTC' (Usa USD)\n- 'Transferir 10 USD para [ID]'\n- 'Nova moeda REAIS Reais'",
-            suggestions=["Criar carteira USD", "Ver saldo"]
+            reply="**💡 Guia de Comandos Rápidos:**\n\n"
+                  "🟢 **Básico:**\n"
+                  "- 'Criar carteira USD'\n"
+                  "- 'Ver meu saldo'\n\n"
+                  "💸 **Transações:**\n"
+                  "- 'Depositar 100 USD'\n"
+                  "- 'Transferir 50 USD para [ID da Carteira]'\n\n"
+                  "🔄 **Trade:**\n"
+                  "- 'Comprar 10 BTC' (Usa seu saldo USD)\n"
+                  "- 'Cotações' (Ver preços)\n\n"
+                  "🛠 **Admin:**\n"
+                  "- 'Nova moeda BRL Real Brasileiro'",
+            suggestions=["Ver saldo", "Cotações", "Criar carteira USD"]
         )
 
-    # Fallback
     return ChatResponse(
-        reply="Não entendi. Tente usar os botões abaixo ou digite 'Ajuda' para ver os comandos.", 
-        suggestions=["Criar carteira USD", "Ver Saldo", "Ajuda"]
+        reply=f"Desculpe, não entendi '**{text}**'. 🤔\n\nTente usar comandos como 'Saldo', 'Cotação' ou 'Ajuda'.", 
+        suggestions=["Ajuda", "Cotações", "Ver saldo"]
     )
 
 if __name__ == '__main__':

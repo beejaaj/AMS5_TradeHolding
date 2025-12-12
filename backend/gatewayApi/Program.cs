@@ -33,9 +33,7 @@ builder.Services.AddAuthentication(options =>
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
 
-    // --- CRUCIAL: Mantém compatibilidade com o token gerado pela UserApi ---
     options.UseSecurityTokenValidators = true; 
-    // -----------------------------------------------------------------------
 
     options.TokenValidationParameters = new TokenValidationParameters
     {

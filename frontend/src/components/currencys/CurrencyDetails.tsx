@@ -14,12 +14,12 @@ export const CurrencyDetails = ({ currency }: { currency: Currency }) => {
 
     return (
         <div className="bg-[#1E2329] rounded-2xl border border-[#2B3139] p-6 shadow-xl relative overflow-hidden group">
-            {/* Glow Background */}
+            
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#8B5CF6]/5 rounded-full blur-3xl -z-10 group-hover:bg-[#8B5CF6]/10 transition-all duration-500" />
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div className="flex items-center gap-4">
-                    {/* Ícone Grande */}
+                   
                     <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0B0E11] border border-[#2B3139] flex items-center justify-center text-xl sm:text-2xl font-bold text-[#8B5CF6] shadow-lg shrink-0">
                         {currency.symbol.substring(0, 2).toUpperCase()}
                     </div>
@@ -45,7 +45,6 @@ export const CurrencyDetails = ({ currency }: { currency: Currency }) => {
                     </div>
                 </div>
 
-                {/* Botão de Editar (Apenas Logado) */}
                 {isLoggedIn && (
                     <Link href={`/currency/edit/${currency.id}`} className="w-full sm:w-auto">
                         <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#2B3139] hover:bg-[#474D57] hover:text-white text-[#EAECEF] rounded-lg text-sm transition-all border border-[#474D57] shadow-sm">
@@ -55,7 +54,6 @@ export const CurrencyDetails = ({ currency }: { currency: Currency }) => {
                 )}
             </div>
 
-            {/* Grid Responsivo de Informações */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
                 <div className="bg-[#0B0E11]/50 p-4 rounded-xl border border-[#2B3139] hover:border-[#8B5CF6]/30 transition-colors sm:col-span-2 md:col-span-1">
                     <p className="text-[#848E9C] text-xs font-bold uppercase mb-2 flex items-center gap-1">

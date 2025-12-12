@@ -84,27 +84,21 @@ builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
-// --- INÍCIO: Adicionar Usuário Padrão ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
-        // IMPORTANTE: Verifique se 'UserDbContext' é o nome correto da sua classe de contexto
-        // Você pode precisar adicionar: using UserApi.Infrastructure.Data;
         var context = services.GetRequiredService<UserDbContext>();
 
-        // Verifica se o usuário já existe pelo e-mail
         if (!context.Users.Any(u => u.Email == "admin@gmail.com"))
         {
-            // IMPORTANTE: Verifique se 'User' é o nome correto da sua entidade
-            // Preenchi os campos obrigatórios baseados no seu frontend (name, phone, address, photo)
             var adminUser = new User 
             {
-                Id = 1, // Se o banco for auto-increment, isso pode ser ignorado pelo EF
+                Id = 1, 
                 Name = "Administrador",
                 Email = "admin@gmail.com",
-                Password = "admin1234", // Nota: Em produção, utilize hash de senha!
+                Password = "admin1234", 
                 Phone = "000000000",
                 Address = "Sistema",
                 Photo = "" 
@@ -120,7 +114,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Erro ao criar o usuário padrão (Seed). Verifique se o nome do DbContext e User estão corretos.");
     }
 }
-// --- FIM: Adicionar Usuário Padrão ---
 
 if (app.Environment.IsDevelopment())
 {

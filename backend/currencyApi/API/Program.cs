@@ -6,64 +6,37 @@ using CurrencyAPI.Domain.Interfaces;
 using CurrencyAPI.Infrastructure.Repositories;
 using CurrencyAPI.Infrastructure.Data;
 using CurrencyAPI.Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer; // <--- ADICIONE ESTE USING
-using Microsoft.IdentityModel.Tokens;              // <--- ADICIONE ESTE USING
-using System.Text;                                 // <--- ADICIONE ESTE USING
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configurar Logs e HTTP Client
+var keyString = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(keyString)) 
+{
+    keyString = "palavras123456789giganteparaumcarambaessachave";
+}
+var key = Encoding.ASCII.GetBytes(keyString);
+
 builder.Services.AddHttpClient();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// 2. Banco de Dados
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. Injeção de Dependência
 builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<IHistoryRepository, HistoryRepository>();
 builder.Services.AddScoped<IHistoryService, HistoryService>();
 
-// 4. Worker de API Externa
 builder.Services.AddHostedService<ExternalApiWorker>();
 
-// ==============================================================================
-// 5. CONFIGURAÇÃO DE AUTENTICAÇÃO (FALTAVA ISSO AQUI!!!)
-// ==============================================================================
-// IMPORTANTE: A chave "Jwt:Key" no appsettings.json da CurrencyAPI deve ser IGUAL à da UserAPI
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"] ?? "palavras123456789giganteparaumcarambaessachave"); 
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false,   // Mantendo false para facilitar (igual UserAPI)
-        ValidateAudience = false, // Mantendo false para facilitar (igual UserAPI)
-        ValidateLifetime = true
-    };
-});
-
-builder.Services.AddAuthorization(); // <--- Necessário para [Authorize] funcionar
-
-builder.Services.AddControllers();
-
-// 6. CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("CorsPolicy", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
@@ -71,7 +44,32 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 7. Swagger com Suporte a JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer"; 
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+
+    options.UseSecurityTokenValidators = true; 
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero 
+    };
+});
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -87,7 +85,6 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 
-    // Adiciona o botão de cadeado no Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -116,7 +113,6 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// 8. Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -128,11 +124,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
 
-// 9. ATIVAR OS MIDDLEWARES DE AUTENTICAÇÃO (NESSA ORDEM!)
-app.UseAuthentication(); // <--- OBRIGATÓRIO (Quem é você?)
-app.UseAuthorization();  // <--- OBRIGATÓRIO (O que você pode fazer?)
+app.UseCors("CorsPolicy"); 
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
+
 app.Run();

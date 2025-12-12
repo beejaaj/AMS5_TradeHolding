@@ -15,7 +15,6 @@ namespace CurrencyAPI.Domain.Entities
         public bool Reverse { get; private set; } = false;
 
 
-        // Relacionamento: 1 Currency tem N Histories
         private readonly List<History> _histories = new();
         public IReadOnlyCollection<History> Histories => _histories.AsReadOnly();
 

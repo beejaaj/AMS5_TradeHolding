@@ -116,7 +116,6 @@ namespace CurrencyAPI.API.Controllers
             return Ok(history);
         }
 
-        // GET api/currencies/convert?from=USD&to=EUR&amount=100
         [HttpGet("convert")]
         public async Task<IActionResult> Convert(string from, string to, decimal amount)
         {

@@ -11,7 +11,6 @@ namespace CurrencyAPI.Domain.Entities
         public DateTime Date { get; set; }
         public decimal Value { get; set; }
 
-        // Propriedade de navegação
         [JsonIgnore]
         public Currency Currency { get; set; }
 
