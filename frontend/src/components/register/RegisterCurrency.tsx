@@ -31,27 +31,42 @@ export const RegisterCurrency = () => {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const res = await fetch(currencyAPI.registerCurrency(), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            });
+    e.preventDefault();
+    setLoading(true);
 
-            if (res.ok) {
-                router.push("/currency"); // Volta para o Dashboard
-            } else {
-                alert("Erro ao criar moeda. Verifique os dados.");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Erro de conexão.");
-        } finally {
+    try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Token não encontrado. Faça login novamente.");
             setLoading(false);
+            return;
         }
-    };
+
+        const res = await fetch(currencyAPI.registerCurrency(), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token.replace(/['"]+/g, '')}`
+            },
+            body: JSON.stringify(formData),
+        });
+
+        if (res.ok) {
+            router.push("/currency");
+        } else {
+            const text = await res.text();
+            console.log("Erro backend:", text);
+            alert("Erro ao criar moeda. Verifique os dados.");
+        }
+    } catch (error) {
+        console.error("Erro ao enviar:", error);
+        alert("Erro de conexão.");
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     return (
         <div className="flex justify-center items-center min-h-[calc(100vh-100px)] p-4">

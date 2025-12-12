@@ -67,20 +67,40 @@ export const CurrencyList = ({ onSelect, selectedId }: CurrencyListProps) => {
 
     // 2. A exclusão real acontece aqui
     const confirmDelete = async () => {
-        if (!currencyToDelete) return;
-        try {
-            await fetch(currencyAPI.deleteCurrency(currencyToDelete), { method: 'DELETE' });
-            fetchCurrencies();
-            // Se o item deletado estava selecionado, limpa a seleção (opcional)
-            if (selectedId === currencyToDelete) {
-               // Lógica para limpar seleção se necessário, ou fetchCurrencies já resolve re-selecionando o primeiro
-            }
-        } catch(e) { 
-            alert("Erro ao excluir"); 
-        } finally {
-            setCurrencyToDelete(null);
+    if (!currencyToDelete) return;
+
+    try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Token não encontrado. Faça login novamente.");
+            return;
         }
-    };
+
+        const res = await fetch(currencyAPI.deleteCurrency(currencyToDelete), {
+            method: 'DELETE',
+            headers: {
+                "Authorization": `Bearer ${token.replace(/['"]+/g, '')}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (res.ok) {
+            fetchCurrencies();
+        } else {
+            const text = await res.text();
+            console.error("Erro backend:", text);
+            alert("Erro ao excluir ativo.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao excluir.");
+    } finally {
+        setCurrencyToDelete(null);
+        setIsDeleteModalOpen(false);
+    }
+};
+
 
     return (
         <>

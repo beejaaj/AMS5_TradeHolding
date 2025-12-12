@@ -1,11 +1,13 @@
 export interface Currency {
-  id?: string;
-  symbol: string;
-  name: string;
-  description?: string;
-  backing: string;
-  status: string;
+    id?: number | string;
+    symbol: string;
+    name: string;
+    description: string;
+    backing: string;
+    status: string;
+    reverse?: boolean;
 }
+
 
 export interface History {
   id: string;

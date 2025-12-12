@@ -14,6 +14,7 @@ import {
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { MotiView } from "moti"; 
+import AsyncStorage from '@react-native-async-storage/async-storage'; // <--- Import necessário
 
 import currencyService from "../../services/currencyService";
 import { Header } from "../../components/Header";
@@ -21,36 +22,50 @@ import { Header } from "../../components/Header";
 export default function CurrencyListScreen() {
   const navigation = useNavigation();
   
-  // Estados
   const [currencies, setCurrencies] = useState([]);
   const [filteredCurrencies, setFilteredCurrencies] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
-  // Carregar dados
-  const fetchCurrencies = async () => {
-    if (!refreshing) setLoading(true);
-    try {
-      const data = await currencyService.getAllCurrency();
-      setCurrencies(data);
-      setFilteredCurrencies(data);
-    } catch (err) {
-      console.error(err);
-      // Opcional: Mostrar toast de erro
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
+  // VERIFICAÇÃO DE LOGIN + CARREGAMENTO DE DADOS
   useFocusEffect(
     useCallback(() => {
-      fetchCurrencies();
+      const checkAuthAndFetch = async () => {
+        try {
+          // 1. Verifica Token
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+             Alert.alert("Acesso Restrito", "Faça login para ver o mercado.");
+             navigation.navigate("Login"); // Redireciona
+             return;
+          }
+
+          // 2. Se logado, busca moedas
+          if (!refreshing) setLoading(true);
+          const data = await currencyService.getAllCurrency();
+          setCurrencies(data);
+          setFilteredCurrencies(data);
+
+        } catch (err) {
+          console.error(err);
+          // Se o erro for 401 vindo da API, também redireciona
+          if (err.response?.status === 401) {
+              await AsyncStorage.removeItem('token');
+              navigation.navigate("Login");
+          }
+        } finally {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      };
+
+      checkAuthAndFetch();
     }, [])
   );
 
-  // Filtro de Busca
+  // ... (Restante das funções: handleSearch, handleDelete, confirmDelete, onRefresh permanecem iguais) ...
+
   const handleSearch = (text) => {
     setSearch(text);
     if (text) {
@@ -64,7 +79,6 @@ export default function CurrencyListScreen() {
     }
   };
 
-  // Ação de Deletar
   const handleDelete = (id) => {
     if (Platform.OS === 'web') {
       if (window.confirm("Tem certeza que deseja excluir esta moeda?")) confirmDelete(id);
@@ -79,10 +93,9 @@ export default function CurrencyListScreen() {
   const confirmDelete = async (id) => {
     try {
       await currencyService.deleteCurrency(id);
-      // Atualiza lista localmente para ser mais rápido
       const newList = currencies.filter(c => c.id !== id);
       setCurrencies(newList);
-      setFilteredCurrencies(newList); // Atualiza também o filtro atual
+      setFilteredCurrencies(newList);
     } catch (err) {
       Alert.alert("Erro", "Falha ao excluir.");
     }
@@ -90,10 +103,17 @@ export default function CurrencyListScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchCurrencies();
+    // Como a lógica principal está no useFocusEffect, podemos chamar fetchCurrencies separado ou recarregar tudo
+    // Aqui vou replicar a chamada simples para o refresh
+    currencyService.getAllCurrency().then(data => {
+        setCurrencies(data);
+        setFilteredCurrencies(data);
+        setRefreshing(false);
+    }).catch(() => setRefreshing(false));
   };
 
-  // Renderização do Item (Card Moderno)
+  // ... (renderItem e return permanecem iguais) ...
+  
   const renderItem = ({ item, index }) => (
     <MotiView
       from={{ opacity: 0, translateY: 10 }}
@@ -116,12 +136,9 @@ export default function CurrencyListScreen() {
         </View>
 
         <View style={styles.cardRight}>
-          {/* Tag de Lastro */}
           <View style={styles.tagContainer}>
             <Text style={styles.tagText}>{item.backing}</Text>
           </View>
-          
-          {/* Botão de Delete */}
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => handleDelete(item.id)}
@@ -138,7 +155,6 @@ export default function CurrencyListScreen() {
       <Header />
       
       <View style={styles.contentContainer}>
-        {/* Título e Botão Adicionar */}
         <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>Mercado</Text>
           <TouchableOpacity 
@@ -149,7 +165,6 @@ export default function CurrencyListScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Barra de Busca */}
         <View style={styles.searchContainer}>
           <Feather name="search" size={18} color="#848E9C" style={styles.searchIcon} />
           <TextInput
@@ -161,7 +176,6 @@ export default function CurrencyListScreen() {
           />
         </View>
 
-        {/* Lista */}
         {loading && !refreshing ? (
           <View style={styles.centerLoading}>
             <ActivityIndicator size="large" color="#8B5CF6" />
@@ -195,8 +209,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  
-  // Header da Página
   pageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -219,8 +231,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-
-  // Busca
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -240,13 +250,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 14,
   },
-
-  // Lista
   listContent: {
     paddingBottom: 40,
   },
-  
-  // Card Item
   card: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -288,7 +294,6 @@ const styles = StyleSheet.create({
     color: '#848E9C',
     fontSize: 12,
   },
-  
   cardRight: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -311,8 +316,6 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 6,
   },
-
-  // Estados
   centerLoading: {
     marginTop: 50,
   },
