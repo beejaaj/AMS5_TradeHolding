@@ -113,9 +113,18 @@ const walletService = {
 
     // 7. Chatbot
     async sendMessage(userId: number | string, message: string) {
-        const response = await axios.post(chatbotAPI.message(), { userId, message });
+        // Envia também o token se o backend Python precisar dele para validar
+        let token = await AsyncStorage.getItem("token");
+        if (token) token = token.trim().replace(/['"]+/g, '');
+
+        const response = await axios.post(chatbotAPI.message(), { 
+            userId, 
+            message,
+            token // Opcional, dependendo do seu backend Python
+        });
         return response.data;
     }
 };
+
 
 export default walletService;
