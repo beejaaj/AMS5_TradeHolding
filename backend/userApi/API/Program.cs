@@ -3,8 +3,6 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using userApi.Domain.Entities;
-using userApi.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

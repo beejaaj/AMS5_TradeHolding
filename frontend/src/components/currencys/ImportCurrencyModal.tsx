@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Search, Download, Loader2, Coins } from "lucide-react";
 import { currencyAPI } from "@/services/API";
+import currencyService, { Currency } from "@/services/currencyService";
 
 // Lista simulada das principais moedas da Binance para importação
 const BINANCE_COINS = [
@@ -44,7 +45,8 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
   const handleImport = async (coin: typeof BINANCE_COINS[0]) => {
     setImportingSymbol(coin.symbol);
     try {
-      const payload = {
+      // Cria o objeto conforme a interface Currency
+      const newCurrency: Currency = {
         symbol: coin.symbol,
         name: coin.name,
         description: `Ativo importado da Binance (${coin.name})`,
@@ -53,11 +55,7 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
         reverse: false
       };
 
-      await fetch(currencyAPI.registerCurrency(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      await currencyService.registerCurrency(newCurrency);
       
       setTimeout(() => {
         setImportingSymbol(null);
@@ -67,7 +65,7 @@ export const ImportCurrencyModal = ({ isOpen, onClose, onSuccess }: ImportModalP
     } catch (error) {
       console.error("Erro ao importar:", error);
       setImportingSymbol(null);
-      alert("Não foi possível importar. Verifique se a moeda já existe.");
+      alert("Não foi possível importar. Verifique se a moeda já existe ou se você está logado.");
     }
   };
 
