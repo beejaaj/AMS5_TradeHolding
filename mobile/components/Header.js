@@ -45,7 +45,7 @@ export const Header = () => {
                 }
 
                 // Verifica se é Admin (ID 31 ou 32 conforme sua regra web)
-                if (String(user.id) === "31" || String(user.id) === "32") {
+                if (String(user.id) === "1") {
                     setIsAdmin(true);
                 } else {
                     setIsAdmin(false);

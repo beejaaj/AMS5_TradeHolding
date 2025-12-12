@@ -22,6 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Header } from "../components/Header";
 import currencyService from "../services/currencyService";
+import { historyAPI } from "../services/API"; // [NOVO] Import da API de histórico
 
 const { width } = Dimensions.get("window");
 
@@ -32,28 +33,20 @@ export default function HomeScreen() {
   const [isLogged, setIsLogged] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Dados Mockados para o Gráfico da Home (Visual apenas)
-  const chartData = {
-    labels: ["D", "S", "T", "Q", "Q", "S", "S"],
-    datasets: [
-      {
-        data: [62000, 63500, 61800, 64200, 63000, 65500, 63200], 
-        color: (opacity = 1) => `rgba(139, 92, 246, ${opacity})`, // Roxo #8B5CF6
-        strokeWidth: 3
-      }
-    ]
-  };
+  
+  // [NOVO] Estado para os dados do gráfico
+  const [chartData, setChartData] = useState(null);
+  const [chartStats, setChartStats] = useState({ change: 0, current: 0 });
 
   const chartConfig = {
     backgroundGradientFrom: "#1E2329",
     backgroundGradientTo: "#1E2329",
-    decimalPlaces: 0,
+    decimalPlaces: 2, // Ajustado para mostrar centavos se necessário
     color: (opacity = 1) => `rgba(139, 92, 246, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(132, 142, 156, ${opacity})`,
     style: { borderRadius: 16 },
-    propsForDots: { r: "0" },
-    propsForBackgroundLines: { strokeDasharray: "" }
+    propsForDots: { r: "0" }, // Remove os pontos para ficar mais limpo como na web
+    propsForBackgroundLines: { strokeDasharray: "", stroke: "#2B3139" }
   };
 
   useFocusEffect(
@@ -67,14 +60,76 @@ export default function HomeScreen() {
     }, [])
   );
 
+  // [NOVO] Função para buscar dados do histórico (Adaptado do CurrencyChart.tsx)
+  const fetchHistory = async (currencyId) => {
+    try {
+        const now = new Date();
+        const from = new Date();
+        from.setDate(now.getDate() - 7); // Busca últimos 7 dias (similar ao 1W da web)
+
+        const url = `${historyAPI.GetRange(currencyId)}?from=${from.toISOString()}&to=${now.toISOString()}`;
+        const res = await fetch(url);
+        
+        if (res.ok) {
+            const historyList = await res.json();
+            
+            // Ordenar por data
+            const sorted = historyList.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (sorted.length > 0) {
+                const prices = sorted.map(h => h.value);
+                
+                // Formatar labels (ex: 12/05)
+                const allLabels = sorted.map(h => {
+                    const d = new Date(h.date);
+                    return `${d.getDate()}/${d.getMonth() + 1}`;
+                });
+
+                // Filtrar labels para não poluir o gráfico no mobile (pega ~6 pontos)
+                const step = Math.ceil(allLabels.length / 6);
+                const labels = allLabels.filter((_, i) => i % step === 0);
+                
+                // Calcular variação
+                const first = prices[0];
+                const last = prices[prices.length - 1];
+                const change = first !== 0 ? ((last - first) / first) * 100 : 0;
+
+                setChartStats({ current: last, change });
+
+                setChartData({
+                    labels: labels,
+                    datasets: [
+                      {
+                        data: prices,
+                        color: (opacity = 1) => `rgba(139, 92, 246, ${opacity})`,
+                        strokeWidth: 2
+                      }
+                    ]
+                });
+            } else {
+                setChartData(null);
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao buscar gráfico:", error);
+    }
+  };
+
   const fetchData = async () => {
     if (!refreshing) setLoading(true);
     try {
       const data = await currencyService.getAllCurrency();
       setCurrencies(data);
+      
       // Pega Bitcoin ou o primeiro da lista
       const featured = data.find(c => c.symbol === "BTC") || data[0];
       setHighlightCoin(featured);
+
+      // [NOVO] Se tiver moeda destaque, busca o gráfico dela
+      if (featured && featured.id) {
+          await fetchHistory(featured.id);
+      }
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -174,29 +229,55 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.priceText}>R$ 63,200</Text>
+                  {/* [ATUALIZADO] Usa valor real do gráfico se disponível */}
+                  <Text style={styles.priceText}>
+                    {chartStats.current > 0 
+                        ? `US$ ${chartStats.current.toFixed(2)}` 
+                        : "US$ ---"}
+                  </Text>
+                  
+                  {/* [ATUALIZADO] Variação real baseada no histórico */}
                   <View style={styles.variationRow}>
-                    <Feather name="trending-up" size={14} color="#0ECB81" />
-                    <Text style={[styles.variationText, { color: "#0ECB81" }]}>+2.15%</Text>
+                    {chartStats.change >= 0 ? (
+                        <Feather name="trending-up" size={14} color="#0ECB81" />
+                    ) : (
+                        <Feather name="trending-down" size={14} color="#F6465D" />
+                    )}
+                    <Text style={[
+                        styles.variationText, 
+                        { color: chartStats.change >= 0 ? "#0ECB81" : "#F6465D" }
+                    ]}>
+                        {chartStats.change.toFixed(2)}% (7D)
+                    </Text>
                   </View>
                 </View>
               </View>
 
-              <LineChart
-                data={chartData}
-                width={width - 80}
-                height={180}
-                chartConfig={chartConfig}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                  paddingRight: 40
-                }}
-                withInnerLines={false}
-                withOuterLines={false}
-                yAxisLabel="R$"
-              />
+              {/* [ATUALIZADO] Renderiza o gráfico apenas se tiver dados */}
+              {chartData ? (
+                <LineChart
+                    data={chartData}
+                    width={width - 50} // Ajuste fino na largura
+                    height={180}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={{
+                    marginVertical: 8,
+                    borderRadius: 16,
+                    paddingRight: 0, // Ajuste para centralizar melhor
+                    marginLeft: -20  // Ajuste para compensar o padding esquerdo do ChartKit
+                    }}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={false} // Oculta valores do eixo Y para limpar visual
+                    yAxisLabel="US$"
+                />
+              ) : (
+                <View style={{ height: 180, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#848E9C' }}>Sem dados históricos</Text>
+                </View>
+              )}
             </>
           )}
         </MotiView>

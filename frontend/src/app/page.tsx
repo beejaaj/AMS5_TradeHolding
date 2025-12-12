@@ -142,7 +142,7 @@ export default function Home() {
                 </div>
                 <div className="text-right">
                   <p className="text-[#EAECEF] text-xl font-mono font-bold">
-                    {lastPrice > 0 ? `R$ ${lastPrice.toFixed(2)}` : "---"}
+                    {lastPrice > 0 ? `US$ ${lastPrice.toFixed(2)}` : "---"}
                   </p>
                   <p className={`text-sm font-bold flex items-center justify-end gap-1 ${isPositive ? 'text-[#0ECB81]' : 'text-[#F6465D]'}`}>
                     {isPositive ? <TrendingUp size={14} /> : <Activity size={14} />}

@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System;
+using System.Globalization;
 using System.Text.Json;
 using CurrencyAPI.Application.Interfaces;
 using CurrencyAPI.API.DTOs;
@@ -16,7 +17,7 @@ namespace CurrencyAPI.Infrastructure.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IServiceProvider _services;
-        private readonly TimeSpan _interval = TimeSpan.FromSeconds(20);
+        private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
         private readonly string _cryptoPricesUrl;
 
         public ExternalApiWorker(IHttpClientFactory httpClientFactory, IConfiguration configuration, IServiceProvider services)
@@ -71,7 +72,7 @@ namespace CurrencyAPI.Infrastructure.Services
                                     var historyDto = new HistoryDTO
                                     {
                                         CurrencyId = currency.Id,
-                                        Value = decimal.Parse(apiResponse.Price),
+                                        Value = decimal.Parse(apiResponse.Price, CultureInfo.InvariantCulture),
                                         Date = DateTime.UtcNow
                                     };
 
