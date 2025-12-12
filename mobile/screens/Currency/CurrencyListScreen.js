@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,25 +6,43 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Alert,
+  TextInput,
   RefreshControl,
+  Alert,
   Platform
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { MotiView } from "moti"; 
 
 import currencyService from "../../services/currencyService";
 import { Header } from "../../components/Header";
 
-export default function CurrencyListScreen({ onSelect }) {
+export default function CurrencyListScreen() {
   const navigation = useNavigation();
+  
+  // Estados
   const [currencies, setCurrencies] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [filteredCurrencies, setFilteredCurrencies] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
-  const [selectedId, setSelectedId] = useState(null);
-  const [menuOpenId, setMenuOpenId] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  
+  // Carregar dados
+  const fetchCurrencies = async () => {
+    if (!refreshing) setLoading(true);
+    try {
+      const data = await currencyService.getAllCurrency();
+      setCurrencies(data);
+      setFilteredCurrencies(data);
+    } catch (err) {
+      console.error(err);
+      // Opcional: Mostrar toast de erro
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -32,148 +50,276 @@ export default function CurrencyListScreen({ onSelect }) {
     }, [])
   );
 
-  async function fetchCurrencies() {
-    if (!refreshing) setLoading(true);
-    setError("");
-    try {
-      const data = await currencyService.getAllCurrency();
-      setCurrencies(data);
-    } catch (err) {
-      setError("Erro ao carregar as moedas.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  // Filtro de Busca
+  const handleSearch = (text) => {
+    setSearch(text);
+    if (text) {
+      const filtered = currencies.filter(c => 
+        c.name.toLowerCase().includes(text.toLowerCase()) || 
+        c.symbol.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredCurrencies(filtered);
+    } else {
+      setFilteredCurrencies(currencies);
     }
-  }
+  };
 
+  // Ação de Deletar
   const handleDelete = (id) => {
     if (Platform.OS === 'web') {
-      const confirmed = window.confirm("Tem certeza que deseja excluir esta moeda?");
-      
-      if (confirmed) {
-        confirmDelete(id);
-      } else {
-        setMenuOpenId(null);
-      }
-      return;
+      if (window.confirm("Tem certeza que deseja excluir esta moeda?")) confirmDelete(id);
+    } else {
+      Alert.alert("Excluir Ativo", "Tem certeza? O histórico também será perdido.", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Excluir", style: "destructive", onPress: () => confirmDelete(id) }
+      ]);
     }
-    Alert.alert("Confirmar exclusão", "Deseja excluir esta moeda?", [
-      { text: "Cancelar", style: "cancel", onPress: () => setMenuOpenId(null) },
-      { text: "Excluir", style: "destructive", onPress: async () => await confirmDelete(id) }
-    ]);
   };
 
   const confirmDelete = async (id) => {
-    setDeleting(true);
     try {
       await currencyService.deleteCurrency(id);
-      
-      setCurrencies(prev => prev.filter(c => c.id !== id));
-      Alert.alert("Sucesso", "Moeda excluída.");
+      // Atualiza lista localmente para ser mais rápido
+      const newList = currencies.filter(c => c.id !== id);
+      setCurrencies(newList);
+      setFilteredCurrencies(newList); // Atualiza também o filtro atual
     } catch (err) {
-      Alert.alert("Erro", "Não foi possível excluir.");
-    } finally {
-      setDeleting(false);
-      setMenuOpenId(null);
+      Alert.alert("Erro", "Falha ao excluir.");
     }
   };
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchCurrencies();
-  }
+  };
 
-  const handleSelect = (item) => { setSelectedId(item.id); setMenuOpenId(null); if (onSelect) onSelect(item); };
-  const toggleMenu = (id) => { setMenuOpenId(prev => prev === id ? null : id); };
-  const handleEdit = (id) => { setMenuOpenId(null); navigation.navigate("CurrencyEdit", { id }); };
+  // Renderização do Item (Card Moderno)
+  const renderItem = ({ item, index }) => (
+    <MotiView
+      from={{ opacity: 0, translateY: 10 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ delay: index * 50 }}
+    >
+      <TouchableOpacity 
+        style={styles.card}
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate("CurrencyDetails", { currency: item })}
+      >
+        <View style={styles.cardLeft}>
+          <View style={styles.iconContainer}>
+            <Text style={styles.iconText}>{item.symbol.substring(0, 2)}</Text>
+          </View>
+          <View>
+            <Text style={styles.coinSymbol}>{item.symbol}</Text>
+            <Text style={styles.coinName} numberOfLines={1}>{item.name}</Text>
+          </View>
+        </View>
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemWrapper}>
-        <TouchableOpacity
-            style={[styles.itemContainer, selectedId === item.id && styles.itemSelected]}
-            onPress={() => handleSelect(item)}
-            activeOpacity={0.7}
-        >
-            <View style={styles.itemInfo}>
-                <Text style={styles.symbolText}>{item.symbol}</Text>
-                <Text style={styles.nameText}>{item.name}</Text>
-            </View>
-
-            <TouchableOpacity style={styles.menuButton} onPress={() => toggleMenu(item.id)}>
-                <Feather name="more-vertical" size={24} color="#ccc" />
-            </TouchableOpacity>
-        </TouchableOpacity>
-
-        {menuOpenId === item.id && (
-            <View style={styles.dropdownMenu}>
-                <TouchableOpacity style={styles.dropdownItem} onPress={() => handleEdit(item.id)}>
-                    <Feather name="edit-2" size={16} color="#fff" />
-                    <Text style={styles.dropdownText}>Editar</Text>
-                </TouchableOpacity>
-                <View style={styles.dropdownDivider} />
-                <TouchableOpacity style={styles.dropdownItem} onPress={() => handleDelete(item.id)}>
-                    <Feather name="trash-2" size={16} color="#f87171" />
-                    <Text style={[styles.dropdownText, { color: '#f87171' }]}>Excluir</Text>
-                </TouchableOpacity>
-            </View>
-        )}
-    </View>
+        <View style={styles.cardRight}>
+          {/* Tag de Lastro */}
+          <View style={styles.tagContainer}>
+            <Text style={styles.tagText}>{item.backing}</Text>
+          </View>
+          
+          {/* Botão de Delete */}
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => handleDelete(item.id)}
+          >
+            <Feather name="trash-2" size={18} color="#474D57" />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </MotiView>
   );
 
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.header}>
-        
-        <Text style={styles.headerTitle}>Moedas</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("CurrencyCreate")}>
+      
+      <View style={styles.contentContainer}>
+        {/* Título e Botão Adicionar */}
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Mercado</Text>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => navigation.navigate("CurrencyCreate")}
+          >
             <Feather name="plus" size={20} color="#fff" />
-            <Text style={styles.addButtonText}>Nova Moeda</Text>
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
+        </View>
 
-      {loading && !refreshing ? (
-        <View style={styles.centerContent}>
-            <ActivityIndicator size="large" color="#5c1a75" />
+        {/* Barra de Busca */}
+        <View style={styles.searchContainer}>
+          <Feather name="search" size={18} color="#848E9C" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar ativos..."
+            placeholderTextColor="#474D57"
+            value={search}
+            onChangeText={handleSearch}
+          />
         </View>
-      ) : error ? (
-        <View style={styles.centerContent}>
-            <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : (
-        <FlatList
-            data={currencies}
+
+        {/* Lista */}
+        {loading && !refreshing ? (
+          <View style={styles.centerLoading}>
+            <ActivityIndicator size="large" color="#8B5CF6" />
+          </View>
+        ) : (
+          <FlatList
+            data={filteredCurrencies}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d8b4fe"/>}
-            ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma moeda cadastrada.</Text>}
-        />
-      )}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8B5CF6"/>
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>Nenhum ativo encontrado.</Text>
+            }
+          />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, paddingTop: 50, backgroundColor: "#000", borderBottomWidth: 1, borderBottomColor: "#333" },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
-  addButton: { flexDirection: "row", backgroundColor: "#5c1a75", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, alignItems: "center", gap: 8 },
-  addButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
-  listContent: { padding: 20, paddingBottom: 100 },
-  itemWrapper: { marginBottom: 12, position: 'relative', zIndex: 1 },
-  itemContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1a001f", padding: 16, borderRadius: 8, borderWidth: 1, borderColor: "#333" },
-  itemSelected: { borderColor: "#d8b4fe", backgroundColor: "#2d0036" },
-  itemInfo: { flexDirection: "row", alignItems: "center", gap: 12 },
-  symbolText: { color: "#d8b4fe", fontWeight: "bold", fontSize: 16, width: 50 },
-  nameText: { color: "#fff", fontSize: 16 },
-  menuButton: { padding: 8 },
-  dropdownMenu: { position: 'absolute', right: 50, top: 10, backgroundColor: "#222", borderRadius: 8, padding: 5, zIndex: 999, borderWidth: 1, borderColor: "#444", minWidth: 120 },
-  dropdownItem: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 12, gap: 8 },
-  dropdownText: { color: "#fff", fontSize: 14 },
-  dropdownDivider: { height: 1, backgroundColor: "#444", marginHorizontal: 5 },
-  centerContent: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { color: "#f87171", fontSize: 16 },
-  emptyText: { color: "#666", textAlign: "center", marginTop: 20, fontSize: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#0B0E11",
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  
+  // Header da Página
+  pageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#EAECEF',
+  },
+  addButton: {
+    backgroundColor: '#8B5CF6',
+    padding: 10,
+    borderRadius: 12,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+
+  // Busca
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E2329',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2B3139',
+    marginBottom: 20,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#EAECEF',
+    paddingVertical: 12,
+    fontSize: 14,
+  },
+
+  // Lista
+  listContent: {
+    paddingBottom: 40,
+  },
+  
+  // Card Item
+  card: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1E2329',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#2B3139',
+  },
+  cardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#0B0E11',
+    borderWidth: 1,
+    borderColor: '#2B3139',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconText: {
+    color: '#8B5CF6',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  coinSymbol: {
+    color: '#EAECEF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  coinName: {
+    color: '#848E9C',
+    fontSize: 12,
+  },
+  
+  cardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  tagContainer: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderColor: 'rgba(139, 92, 246, 0.2)',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  tagText: {
+    color: '#8B5CF6',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  actionButton: {
+    padding: 6,
+  },
+
+  // Estados
+  centerLoading: {
+    marginTop: 50,
+  },
+  emptyText: {
+    color: '#848E9C',
+    textAlign: 'center',
+    marginTop: 40,
+    fontStyle: 'italic',
+  },
 });

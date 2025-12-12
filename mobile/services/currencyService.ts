@@ -1,53 +1,48 @@
-
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { currencyAPI } from "./API";
 import { Currency } from "./types";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const getHeaders = async () => {
+    let token = await AsyncStorage.getItem("token");
+    if (token) token = token.trim().replace(/['"]+/g, '');
+    
+    return {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
 
 const currencyService = {
     async getAllCurrency(): Promise<Currency[]> {
-        const header = {
-            headers: {
-                'Accept': 'application/json',
-            }
-        };
-        const response = await axios.get(currencyAPI.getAllCurrency(), header);
+        const response = await axios.get(currencyAPI.getAllCurrency(), {
+            headers: { 'Accept': 'application/json' }
+        });
         return response.data;   
     },
+
     async getCurrencyDetails(id: number | string): Promise<Currency> {
         const response = await axios.get(currencyAPI.getCurrencyDetails(id), {
             headers: { 'Accept': 'application/json' }
         });
         return response.data;
     },
-    async updateCurrency(id: number | string, currencyData: Currency): Promise<void> {
-        // Se precisar de token, descomente as linhas abaixo:
-        // let token = await AsyncStorage.getItem("token");
-        // if (token) token = token.replace(/"/g, '').trim();
 
-        await axios.put(currencyAPI.updateCurrency(id), currencyData, {
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                // ...(token && { 'Authorization': `Bearer ${token}` }) 
-            }
-        });
-    },
-    async deleteCurrency(id: number): Promise<void> {
-        await axios.delete(currencyAPI.deleteCurrency(id));
-    },
     async registerCurrency(currencyData: Currency): Promise<void> {
-        let token = await AsyncStorage.getItem("token");
-        if (token) token = token.replace(/"/g, '').trim();
+        const headers = await getHeaders();
+        await axios.post(currencyAPI.registerCurrency(), currencyData, { headers });
+    },
 
-        await axios.post(currencyAPI.registerCurrency(), currencyData, {
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                ...(token && { 'Authorization': `Bearer ${token}` }) 
-            }
-        });
-    }
+    async updateCurrency(id: number | string, currencyData: Currency): Promise<void> {
+        const headers = await getHeaders();
+        await axios.put(currencyAPI.updateCurrency(id), currencyData, { headers });
+    },
+
+    async deleteCurrency(id: number | string): Promise<void> {
+        const headers = await getHeaders(); 
+        await axios.delete(currencyAPI.deleteCurrency(id), { headers });
+    },
 };
 
 export default currencyService;
