@@ -27,6 +27,10 @@ start "Chatbot API" cmd /k "cd backend/chatbotApi && python main.py"
 echo Iniciando Frontend...
 start "Frontend" cmd /k "cd frontend && npm run dev"
 
+:: 7. Mobile (React Native - Porta Padrao 8081)
+echo Iniciando Mobile...
+start "Mobile App" cmd /k "cd mobile && npx expo start"
+
 echo ==========================================
 echo Todos os servicos foram disparados!
 echo Verifique as janelas abertas para erros.

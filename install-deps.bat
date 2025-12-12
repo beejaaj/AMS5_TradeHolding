@@ -5,7 +5,7 @@ echo ===================================================
 
 :: 1. Frontend (Node.js)
 echo.
-echo [1/3] Instalando dependencias do Frontend (Next.js)...
+echo [1/4] Instalando dependencias do Frontend (Next.js)...
 cd frontend
 call npm install
 cd ..
@@ -13,17 +13,16 @@ echo Frontend OK!
 
 :: 2. Chatbot API (Python)
 echo.
-echo [2/3] Instalando dependencias do Chatbot...
+echo [2/4] Instalando dependencias do Chatbot...
 cd backend/chatbotApi
 echo Tentando instalar via Python Launcher (py)...
-:: AQUI ESTA A MUDANCA: Usamos 'py -m pip' em vez de apenas 'pip'
 py -m pip install -r requirements.txt
 cd ../..
 echo Chatbot OK!
 
 :: 3. Backend APIs (.NET)
 echo.
-echo [3/3] Restaurando pacotes das APIs .NET...
+echo [3/4] Restaurando pacotes das APIs .NET...
 
 echo - Gateway API...
 dotnet restore backend/gatewayApi/gatewayApi.csproj
@@ -36,6 +35,14 @@ dotnet restore backend/currencyApi/currencyApi.csproj
 
 echo - Wallet API...
 dotnet restore backend/walletApi/walletApi.csproj
+
+:: 4. Mobile (React Native)
+echo.
+echo [4/4] Instalando dependencias do Mobile...
+cd mobile
+call npm install
+cd ..
+echo Mobile OK!
 
 echo.
 echo ===================================================
