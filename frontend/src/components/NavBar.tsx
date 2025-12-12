@@ -54,7 +54,7 @@ export default function NavBar() {
               setUserPhoto(null);
           }
 
-          if (userId === "31" || userId === "32") {
+          if (userId === "1") {
               setIsAdmin(true);
           } else {
               setIsAdmin(false);
