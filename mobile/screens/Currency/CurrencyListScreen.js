@@ -14,10 +14,11 @@ import {
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { MotiView } from "moti"; 
-import AsyncStorage from '@react-native-async-storage/async-storage'; // <--- Import necessário
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 import currencyService from "../../services/currencyService";
 import { Header } from "../../components/Header";
+import ImportCurrencyModal from "../../components/ImportCurrencyModal";
 
 export default function CurrencyListScreen() {
   const navigation = useNavigation();
@@ -28,28 +29,36 @@ export default function CurrencyListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
+  // Estado para controlar a visibilidade do Modal
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  
   // VERIFICAÇÃO DE LOGIN + CARREGAMENTO DE DADOS
+  const fetchCurrencies = async () => {
+    try {
+        const data = await currencyService.getAllCurrency();
+        setCurrencies(data);
+        setFilteredCurrencies(data);
+    } catch (err) {
+        console.error(err);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       const checkAuthAndFetch = async () => {
         try {
-          // 1. Verifica Token
           const token = await AsyncStorage.getItem('token');
           if (!token) {
              Alert.alert("Acesso Restrito", "Faça login para ver o mercado.");
-             navigation.navigate("Login"); // Redireciona
+             navigation.navigate("Login"); 
              return;
           }
 
-          // 2. Se logado, busca moedas
           if (!refreshing) setLoading(true);
-          const data = await currencyService.getAllCurrency();
-          setCurrencies(data);
-          setFilteredCurrencies(data);
+          await fetchCurrencies();
 
         } catch (err) {
           console.error(err);
-          // Se o erro for 401 vindo da API, também redireciona
           if (err.response?.status === 401) {
               await AsyncStorage.removeItem('token');
               navigation.navigate("Login");
@@ -63,8 +72,6 @@ export default function CurrencyListScreen() {
       checkAuthAndFetch();
     }, [])
   );
-
-  // ... (Restante das funções: handleSearch, handleDelete, confirmDelete, onRefresh permanecem iguais) ...
 
   const handleSearch = (text) => {
     setSearch(text);
@@ -103,16 +110,14 @@ export default function CurrencyListScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    // Como a lógica principal está no useFocusEffect, podemos chamar fetchCurrencies separado ou recarregar tudo
-    // Aqui vou replicar a chamada simples para o refresh
-    currencyService.getAllCurrency().then(data => {
-        setCurrencies(data);
-        setFilteredCurrencies(data);
-        setRefreshing(false);
-    }).catch(() => setRefreshing(false));
+    fetchCurrencies().finally(() => setRefreshing(false));
   };
 
-  // ... (renderItem e return permanecem iguais) ...
+  // Função chamada quando uma moeda é importada com sucesso
+  const handleImportSuccess = () => {
+    setRefreshing(true);
+    fetchCurrencies().finally(() => setRefreshing(false));
+  };
   
   const renderItem = ({ item, index }) => (
     <MotiView
@@ -155,14 +160,28 @@ export default function CurrencyListScreen() {
       <Header />
       
       <View style={styles.contentContainer}>
+        
+        {/* HEADER DA PÁGINA COM OS DOIS BOTÕES */}
         <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>Mercado</Text>
-          <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={() => navigation.navigate("CurrencyCreate")}
-          >
-            <Feather name="plus" size={20} color="#fff" />
-          </TouchableOpacity>
+          
+          <View style={{flexDirection: 'row', gap: 10}}>
+              {/* Botão Importar */}
+              <TouchableOpacity 
+                style={[styles.addButton, {backgroundColor: '#2B3139', borderWidth: 1, borderColor: '#474D57'}]} 
+                onPress={() => setIsImportModalOpen(true)}
+              >
+                <Feather name="download" size={20} color="#EAECEF" />
+              </TouchableOpacity>
+
+              {/* Botão Criar Manualmente */}
+              <TouchableOpacity 
+                style={styles.addButton} 
+                onPress={() => navigation.navigate("CurrencyCreate")}
+              >
+                <Feather name="plus" size={20} color="#fff" />
+              </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.searchContainer}>
@@ -196,19 +215,22 @@ export default function CurrencyListScreen() {
           />
         )}
       </View>
+
+      {/* MODAL DE IMPORTAÇÃO */}
+      <ImportCurrencyModal 
+        visible={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={handleImportSuccess} 
+      />
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0E11",
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
+  container: { flex: 1, backgroundColor: "#0B0E11" },
+  contentContainer: { flex: 1, paddingHorizontal: 20 },
+  
   pageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -216,21 +238,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 16,
   },
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#EAECEF',
-  },
+  pageTitle: { fontSize: 28, fontWeight: 'bold', color: '#EAECEF' },
+  
   addButton: {
     backgroundColor: '#8B5CF6',
     padding: 10,
     borderRadius: 12,
-    shadowColor: "#8B5CF6",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,18 +263,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 12,
   },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#EAECEF',
-    paddingVertical: 12,
-    fontSize: 14,
-  },
-  listContent: {
-    paddingBottom: 40,
-  },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, color: '#EAECEF', paddingVertical: 12, fontSize: 14 },
+  
+  listContent: { paddingBottom: 40 },
+  
   card: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -264,12 +279,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2B3139',
   },
-  cardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
+  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   iconContainer: {
     width: 40,
     height: 40,
@@ -280,25 +290,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconText: {
-    color: '#8B5CF6',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  coinSymbol: {
-    color: '#EAECEF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  coinName: {
-    color: '#848E9C',
-    fontSize: 12,
-  },
-  cardRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
+  iconText: { color: '#8B5CF6', fontWeight: 'bold', fontSize: 12 },
+  coinSymbol: { color: '#EAECEF', fontSize: 16, fontWeight: 'bold' },
+  coinName: { color: '#848E9C', fontSize: 12 },
+  
+  cardRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   tagContainer: {
     backgroundColor: 'rgba(139, 92, 246, 0.1)',
     borderColor: 'rgba(139, 92, 246, 0.2)',
@@ -307,22 +303,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
-  tagText: {
-    color: '#8B5CF6',
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  actionButton: {
-    padding: 6,
-  },
-  centerLoading: {
-    marginTop: 50,
-  },
-  emptyText: {
-    color: '#848E9C',
-    textAlign: 'center',
-    marginTop: 40,
-    fontStyle: 'italic',
-  },
+  tagText: { color: '#8B5CF6', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' },
+  actionButton: { padding: 6 },
+  
+  centerLoading: { marginTop: 50 },
+  emptyText: { color: '#848E9C', textAlign: 'center', marginTop: 40, fontStyle: 'italic' },
 });

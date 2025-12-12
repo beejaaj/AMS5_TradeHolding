@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Search, Download, Loader2, Coins } from "lucide-react";
 import { currencyAPI } from "@/services/API";
+import currencyService, { Currency } from "@/services/currencyService";
 
 const BINANCE_COINS = [
   { symbol: "USD", name: "United States Dollar", backing: "Fiat" }, 
