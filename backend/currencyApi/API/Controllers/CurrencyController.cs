@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CurrencyAPI.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using CurrencyAPI.API.DTOs;
@@ -18,7 +19,8 @@ namespace CurrencyAPI.API.Controllers
         {
             _currencyService = currencyService;
         }
-
+        
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> RegisterCurrency([FromBody] CurrencyDTO dto)
         {
@@ -73,6 +75,7 @@ namespace CurrencyAPI.API.Controllers
             });
         }
 
+        [Authorize]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> UpdateCurrency(Guid id, [FromBody] CurrencyDTO dto)
         {
@@ -90,6 +93,7 @@ namespace CurrencyAPI.API.Controllers
         }
 
 
+        [Authorize]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteCurrency(Guid id)
         {
@@ -112,7 +116,6 @@ namespace CurrencyAPI.API.Controllers
             return Ok(history);
         }
 
-        // GET api/currencies/convert?from=USD&to=EUR&amount=100
         [HttpGet("convert")]
         public async Task<IActionResult> Convert(string from, string to, decimal amount)
         {

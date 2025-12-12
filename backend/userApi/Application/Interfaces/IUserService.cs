@@ -6,4 +6,5 @@ public interface IUserService
     UserDTO? UpdateUser(int id, UserDTO userDto);
     bool DeleteUser(int id);
     UserDTO? ValidateUser(string email, string password);
+    UserDTO? GetUserByEmail(string email);
 }
