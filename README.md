@@ -11,4 +11,4 @@ A solução integra diversas tecnologias modernas: backend em .NET seguindo prin
 - Matheus - Front-end e ocelot
 
 ## Documentação
-A documentação especializada foi disponibilizada em um arquivo .docx e pode ser encontrada na pasta principal do projeto.
+A documentação especializada foi disponibilizada em um arquivo PDF e pode ser encontrada na pasta principal do projeto.
